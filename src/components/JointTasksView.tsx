@@ -4,14 +4,34 @@ import { JOINT_TASKS_DATA, type JointTaskItem, type JointTaskStatus } from '../d
 import { exportRowsToCsv } from '../lib/supabase';
 
 const STORAGE_KEY = 'noub_crm_joint_tasks_v1';
+const JOINT_VERSION_KEY = 'noub_crm_joint_tasks_ver_v1';
+const CURRENT_JOINT_VER = '2026-11-25-v2';
 
 function loadTasks(): JointTaskItem[] {
   if (typeof window === 'undefined') return JOINT_TASKS_DATA;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return JOINT_TASKS_DATA;
+    const savedVer = window.localStorage.getItem(JOINT_VERSION_KEY);
+    if (!raw) {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(JOINT_TASKS_DATA));
+      window.localStorage.setItem(JOINT_VERSION_KEY, CURRENT_JOINT_VER);
+      return JOINT_TASKS_DATA;
+    }
     const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      if (savedVer === CURRENT_JOINT_VER) return parsed;
+      const prevMap = new Map((parsed as JointTaskItem[]).map((item) => [item.id, item]));
+      const seedIds = new Set(JOINT_TASKS_DATA.map((item) => item.id));
+      const merged = JOINT_TASKS_DATA.map((seedItem) => {
+        const prev = prevMap.get(seedItem.id);
+        return prev ? { ...seedItem, status: prev.status } : seedItem;
+      });
+      const custom = (parsed as JointTaskItem[]).filter((item) => !seedIds.has(item.id));
+      const next = [...merged, ...custom];
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      window.localStorage.setItem(JOINT_VERSION_KEY, CURRENT_JOINT_VER);
+      return next;
+    }
   } catch {
     // ignore
   }

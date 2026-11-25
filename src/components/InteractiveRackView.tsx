@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import {
   MESHAWIR_RACK_META,
+  NETWORK_VPN_WAVE_SPEC,
   VLAN_DEFINITIONS,
   type RackDevice,
   type RackPort,
@@ -465,6 +466,39 @@ export const InteractiveRackView: React.FC = () => {
               <span>{v.name}</span>
             </button>
           ))}
+        </div>
+      </div>
+
+      {/* ER8411 Network Policy, Static Public IP, WireGuard VPN + Grandstream Wave Banner */}
+      <div className="bg-white border border-slate-200 rounded-xl p-4 grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+        <div className="border-r-2 border-emerald-600 pr-3 space-y-1">
+          <div className="flex items-center justify-between gap-2">
+            <span className="font-bold text-slate-900">Static Public IP (WAN1)</span>
+            <span className="font-semibold text-emerald-700">{NETWORK_VPN_WAVE_SPEC.staticIpStatus}</span>
+          </div>
+          <p className="text-slate-600 leading-relaxed">
+            {NETWORK_VPN_WAVE_SPEC.staticPublicIpDecision}
+          </p>
+        </div>
+
+        <div className="border-r-2 border-amber-500 pr-3 space-y-1">
+          <div className="flex items-center justify-between gap-2">
+            <span className="font-bold text-slate-900">WireGuard VPN + Grandstream Wave</span>
+            <span className="font-semibold text-amber-700">{NETWORK_VPN_WAVE_SPEC.remoteWorkStatus}</span>
+          </div>
+          <p className="text-slate-600 leading-relaxed">
+            دعم <strong className="font-mono tabular-nums text-slate-900">25–30</strong> مستخدماً عن بُعد على <span className="font-mono text-slate-800">ER8411</span> بعزل صارم لنفق <span className="font-mono text-slate-800">VLAN 30 (192.168.30.1)</span> دون فتح SIP/RTP للإنترنت العام.
+          </p>
+        </div>
+
+        <div className="border-r-2 border-slate-400 pr-3 space-y-1">
+          <div className="flex items-center justify-between gap-2">
+            <span className="font-bold text-slate-900">تنبيه الجرد والأمان (R730 / ISO)</span>
+            <span className="font-semibold text-slate-600">يحتاج تحققاً</span>
+          </div>
+          <p className="text-slate-600 leading-relaxed">
+            الشركة غير حاصلة على <span className="font-mono text-slate-800">ISO 27001</span> حتى الآن (هدف مستقبلي). وسجل <span className="font-mono text-slate-800">Dell R730 + 20 CALs</span> مرجع تاريخي منفصل عن R640 وZ440 الفعليين بالراك.
+          </p>
         </div>
       </div>
 

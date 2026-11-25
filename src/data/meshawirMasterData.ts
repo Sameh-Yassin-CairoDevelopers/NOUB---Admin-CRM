@@ -1,3 +1,5 @@
+export type KnowledgeStatus = 'مؤكد' | 'قيد التنفيذ' | 'مؤجل' | 'مقترح' | 'يحتاج تحققاً';
+
 export interface MeshawirProject {
   id: string;
   enterprise_id: string;
@@ -5,6 +7,8 @@ export interface MeshawirProject {
   code: string;
   category: string;
   status: string;
+  knowledge_status: KnowledgeStatus;
+  priority_tier: string;
   figma_completion_pct: number;
   description: string;
   repo_url: string;
@@ -199,6 +203,7 @@ export interface ProjectTaskItem {
   priority: string;
   status: string;
   assigned_to: string;
+  due_date?: string;
 }
 
 export interface SystemInquiryItem {
@@ -237,89 +242,129 @@ export const MESHAWIR_ENTERPRISE = {
   legal_name: 'شركة مشاوير للمنصات الرقمية وخدمات النقل الذكي ذ.م.م',
   commercial_register: '757315518',
   tax_number: '662709268',
-  duns_number_status: 'قيد الاستخراج والتحديث (أكتوبر)',
+  duns_number_status: 'قيد الاستخراج والتحديث (يحتاج تحققاً من الإتمام الفعلي)',
   headquarters_address: 'مدينة المعراج بجوار كارفور المعادي، قسم المعادي، القاهرة (25.91م × 20.94م)',
   ceo_name: 'أبو خالد',
   branch_manager_name: 'المهندس عماد الشرقاوي',
   cto_name: 'المهندس سامح يس',
+  cto_role_title: 'مدير قطاع التكنولوجيا وإدارة المشروعات الرقمية',
+  report_reference_date: '2026-11-25',
+  active_priority_focus: 'تطبيق 4B (العملاء) + تطبيق كابتن مشاوير هما الأولوية التنفيذية والتشغيلية الأولى حالياً في المعادي؛ أما Daro و WeKaLa فهما مؤجلان مؤقتاً لحين استلام وتشغيل 4B.',
 };
 
 export const MESHAWIR_PROJECTS: MeshawirProject[] = [
   {
     id: 'proj-4b',
     enterprise_id: 'ent-mashawer',
-    name: 'تطبيق فور بي للركاب والأسطول (4B / GoRide)',
+    name: 'تطبيق 4B — منصة النقل الذكي واللوجستيات للعملاء (الاسم التاريخي: مشاوير / Veri / GA Ride / GoPlex)',
     code: '4B',
-    category: 'مشاوير',
-    status: 'في الإنتاج والاختبار الميداني',
+    category: 'الأولوية الأولى — نشط',
+    status: 'نشط — الأولوية الأولى (قيد المراجعة والاختبار قبل الإطلاق)',
+    knowledge_status: 'قيد التنفيذ',
+    priority_tier: 'الأولوية #1 (نشط)',
     figma_completion_pct: 95,
     description:
-      'تطبيق طلب الرحلات والمزايدة الحية (عرض ينتهي خلال 15 ثانية لو انقطع اتصال الكابتن، ومهلة OTP 60 ثانية). يعمل على Node.js 22 + NestJS + Next.js SSR + PostgreSQL 16 + PostGIS 3.4 + Redis 7 + Cloudinary Signed HMAC + BroadNet/Twilio + Fawry Webhook + CompreFace KYC محلي في مصر على خوادم WE التزاماً بقانون النقل الذكي 87/2018 وحماية البيانات 151/2018.',
+      'التطبيق التجاري المعتمد (4B / Four Brothers سابقاً GoPlex وGA Ride وVeri). يشمل 4 فئات مركبات بحدود تشغيل صارمة (نصف النقل Pickup للطرود والبضائع فقط لا للركاب)، ميزة Add Stop متعددة المحطات (تغني عن Shared Load)، منظومة 4B Prepaid Trips للشركات (قيد التطوير)، وبنية Node.js/NestJS + Flutter + MongoDB/Prisma + PostgreSQL 16/PostGIS على خوادم WE.',
     repo_url: 'https://github.com/mashweer/4b-passenger-app',
     figma_url: 'https://www.figma.com/design/ulWwUzLnKThS2cfJWDetX6/%D9%85%D8%B4%D8%A7%D9%88%D9%8A%D8%B1---backlog?node-id=221-63531',
     live_url: 'https://admin.4b.com.eg',
     apk_files: [
-      { id: 'apk-4b-1', version: 'v1.4.2-beta', buildNumber: 142, fileName: '4B_Passenger_v1.4.2_release.apk', fileSize: '34.8 MB', status: 'جاهز للاختبار' },
-      { id: 'apk-4b-drv', version: 'v2.4.1-rc', buildNumber: 241, fileName: 'Mashweer_Driver_4B.apk', fileSize: '42.5 MB', status: 'قيد التجربة الميدانية' },
+      { id: 'apk-4b-1', version: 'v1.4.2-beta', buildNumber: 142, fileName: '4B_Passenger_v1.4.2_release.apk', fileSize: '34.8 MB', status: 'جاهز للاختبار — لا يثبت وحده جاهزية الإنتاج' },
+      { id: 'apk-4b-drv', version: 'v2.4.1-rc', buildNumber: 241, fileName: 'Mashweer_Driver_4B.apk', fileSize: '42.5 MB', status: 'تطبيق كابتن مشاوير المستقل' },
     ],
     context_hints: [
-      'يختلف جذرياً عن وكالة: يستخدم PostgreSQL+PostGIS+Fawry+BroadNet+CompreFace وليس MongoDB أو Agora أو Paymob',
-      'فجوات ما قبل الإطلاق الـ 5: (1) FCM OAuth2، (2) تحويل خريطة الأدمن (~815 سطر) من Leaflet لـ Google Maps، (3) استكمال 20 طابور BullMQ، (4) ترقية NestJS 11 لثغرات multer/exceljs، (5) نشر CompreFace محلياً وربط LTRA وتثبيت LTR لأرقام الهواتف واللوحات',
-      'آلة الحالات الـ 6 تُدار من السيرفر لمنع التلاعب',
+      'التمييز الحاسم: تطبيق 4B للعملاء منفصل تماماً عن تطبيق كابتن مشاوير (Captain Mashawir)',
+      'حوكمة التحقق: وجود ميزة في Figma أو المحاكي Android Emulator API 37 لا يثبت تشغيلها الفعلي أو أمان الـ GPS — مطلوب GPS Integrity Test 01 على هاتف حقيقي',
+      'التوصيل متعدد المحطات موجود فعلياً باسم Add Stop داخل المنظومة؛ لا يُعامل Daro أو Shared Load كأفكار بديلة عنه',
+      '4B Prepaid Trips (المسودة السابقة: 4B Digital Trips) مسار كوبونات شركات B2B وليس وكالة تسويق وإعلانات',
+      'فجوات ما قبل الإطلاق: (1) FCM OAuth2، (2) خريطة الأدمن من Leaflet لـ Google Maps، (3) طوابير BullMQ، (4) NestJS 11، (5) CompreFace داخل مصر وربط LTRA وفصل فوري/الدفع الفعلي',
     ],
     db_info: {
-      engine: 'PostgreSQL 16 + PostGIS 3.4 + Redis 7 (noeviction)',
+      engine: 'PostgreSQL 16 + PostGIS 3.4 + Redis 7 (WE Cloud) + Flutter/Node.js/Prisma/MongoDB (كود التطبيق)',
       tables: ['trips', 'passengers', 'captains', 'saved_addresses', 'ride_ratings', 'bidding_offers', 'wallets', 'fawry_transactions', 'coupons'],
+    },
+  },
+  {
+    id: 'proj-captain-mashawir',
+    enterprise_id: 'ent-mashawer',
+    name: 'تطبيق كابتن مشاوير (Captain Mashawir — واجهة مستقلة مرتبطة بـ 4B)',
+    code: 'CAPTAIN-4B',
+    category: 'الأولوية الأولى (ب) — نشط',
+    status: 'نشط ومرتبط بـ 4B — مطلوب اختبار رحلة End-to-End على هاتف حقيقي',
+    knowledge_status: 'قيد التنفيذ',
+    priority_tier: 'الأولوية #1B (نشط)',
+    figma_completion_pct: 95,
+    description:
+      'تطبيق السائق/الكابتن المستقل المربوط بمنظومة 4B؛ يدعم تسجيل الكابتن والمركبة والمستندات، التحقق من الوجه/الشخصية (CompreFace Liveness داخل مصر)، Online/Offline، استقبال وقبول الطلبات عبر 4 فئات مركبات، التتبع اللحظي، المحفظة والتسويات، وتأكيد التسليم/SOS.',
+    repo_url: 'https://github.com/mashweer/4b-captain-app',
+    figma_url: 'https://www.figma.com/design/ulWwUzLnKThS2cfJWDetX6/%D9%85%D8%B4%D8%A7%D9%88%D9%8A%D8%B1---backlog',
+    live_url: '',
+    apk_files: [
+      { id: 'apk-cap-1', version: 'v2.4.1-rc', buildNumber: 241, fileName: 'Mashweer_Driver_4B.apk', fileSize: '42.5 MB', status: 'يحتاج اختبار حقيقي بعيداً عن المحاكي' },
+    ],
+    context_hints: [
+      'تجربة 23 نوفمبر 2026 تمت على محاكي Android API 37 ولا تصلح كدليل أمان GPS أو جاهزية إطلاق',
+      'متطلبات اختبار End-to-End الـ 5: حساب كابتن تجريبي + حساب عميل تجريبي + لوحة إدارة + هاتف أندرويد حقيقي + تجربة دورة كاملة من الإنشاء حتى الإغلاق',
+      'احتفاظ صور التحقق من الوجه 1–3 أسابيع على خوادم داخل مصر (WE / MIST) بدون Backup طويل الأمد ينتظر الاعتماد القانوني والأمني النهائي',
+    ],
+    db_info: {
+      engine: 'WE Cloud Isolated VM + Docker + Ubuntu + CompreFace + PostGIS',
+      tables: ['captains', 'captain_documents', 'vehicle_categories', 'trip_offers', 'captain_wallets', 'liveness_checks'],
     },
   },
   {
     id: 'proj-daro',
     enterprise_id: 'ent-mashawer',
-    name: 'تطبيق دارو السوبر آب للشحن والطرود (Daro Super App)',
+    name: 'منصة دارو (Daro Super App — منصة خدمات متكاملة للزوار العرب والسياح ورجال الأعمال والطلاب في مصر)',
     code: 'DARO',
-    category: 'مشاوير',
-    status: 'قيد التطوير (فيجما 70%)',
+    category: 'مؤجل مؤقتاً حتى استلام 4B',
+    status: 'مؤجل مؤقتاً — ملف فيجما يضم 9 صفحات وبها 8 ملاحظات ومشكلات مراجعة (24 نوفمبر 2026)',
+    knowledge_status: 'مؤجل',
+    priority_tier: 'مؤجل #3 (بعد تشغيل 4B)',
     figma_completion_pct: 70,
     description:
-      'منصة السوبر آب متعددة الخدمات اللوجستية: (1) الطرود السريعة بنفس اليوم داخل المدينة، (2) الشحن الثقيل والتجاري بين المحافظات، (3) توصيل المتاجر الإلكترونية. يشمل توليد بوليصة رقمية بباركود فريد Code128/QR بـ 3 نقاط مسح (استلام، فرز، تسليم بتوقيع/رمز)، وقراءة الباركود عبر Google ML Kit أو أجهزة Handheld، ومحفظة التحصيل عند الاستلام COD لتسوية مستحقات التجار، مع فكرة توسع مستقبلية لمشروع دارو لندن.',
+      'سوبر آب مخصص للزوار العرب والسياح ورجال الأعمال والطلاب القادمين إلى مصر (لا يستهدف المصريين كشريحة تسويقية رئيسية) عبر حساب موحد يضم 5 أدوار منطقية. يشمل 6 قطاعات: (1) الإقامة والعقارات، (2) السيارات والنقل + 4B، (3) الطيران والفنادق (طيران داخلي داخل مصر فقط عبر Amadeus / EgyptAir NDC)، (4) المطاعم والأكل المنزلي، (5) الخدمات الطبية، (6) خدمات الترجمة والإرشاد والطلاب والتنظيف والصيانة.',
     repo_url: 'https://github.com/mashweer/daro-cargo-system',
-    figma_url: 'https://www.figma.com/design/aR1aanpRzGL7aMoxROGgt5/Daro',
+    figma_url: 'https://www.figma.com/design/aR1aanpRzGL7aMoxROGgt5/Daro?node-id=3214-2',
     live_url: 'https://daro.eg',
     apk_files: [],
     context_hints: [
-      'حسم قرار شراء أجهزة Barcode Scanner ليزر أم الاعتماد على كاميرا الموبايل مجاناً عبر Google ML Kit',
-      'تدوير سجلات التتبع tracking_logs دورياً',
-      'تشمل الرؤية المستقبلية إطلاق Daro London في المملكة المتحدة وأوروبا',
+      'قيد جغرافي صارم: حجز الطيران في دارو يقتصر على الطيران الداخلي داخل مصر فقط (Amadeus / EgyptAir NDC)',
+      'توقف التحليل الآلي في قيمة تك بعد ~44 دقيقة بسبب حد الـ Credit/Quota (إعادة الضبط 30 نوفمبر 2026)',
+      '8 عيوب موثقة في Figma بتاريخ 24 نوفمبر: تناقض الأرقام (25,000 / 3,200 / 1,000 / 40,000 / 15% / 10%)، تواريخ 2024–2028، 13 شيك، عدم وضوح حجز vs حجز مبدئي، وانقطاع مسار الدفع والتأكيد',
+      'لا يوجد فريق تشغيل مستقل لـ Daro بالمعادي حالياً؛ الأولوية التنفيذية الكاملة لـ 4B',
     ],
     db_info: {
-      engine: 'PostgreSQL / Supabase + Redis',
-      tables: ['shipments', 'waybills', 'cargo_hubs', 'warehouses', 'truck_dispatches', 'cod_wallets', 'tracking_logs', 'manifests'],
+      engine: 'قيد التأجيل حتى استلام وتشغيل 4B',
+      tables: ['users', 'property_owners', 'service_providers', 'medical_roles', 'domestic_flights', 'stays_bookings', 'restaurants_homefood'],
     },
   },
   {
     id: 'proj-wekala',
     enterprise_id: 'ent-mashawer',
-    name: 'منصة وتطبيق وكالة لإدارة الأساطيل والمكاتب (WeKaLa)',
+    name: 'منصة وكالة (WeKaLa — سوق النخبة الذكي: بيع، مزاد، ومقايضة Marketplace)',
     code: 'WEKALA',
-    category: 'مشاوير',
-    status: 'قيد الاختبار واستلام السورس كود (فيجما 80%)',
+    category: 'مؤجل مؤقتاً حتى استلام 4B',
+    status: 'مؤجل مؤقتاً لحين استلام وتشغيل 4B (نموذج العمولات والرسوم غير محسوم نهائياً)',
+    knowledge_status: 'مؤجل',
+    priority_tier: 'مؤجل #3 (بعد تشغيل 4B)',
     figma_completion_pct: 80,
     description:
-      'منصة إدارة الوكالات الإقليمية ومكاتب التوصيل بالمحافظات: تسجيل الوكلاء برفع السجل التجاري وهوية المدير، ربط الكباتن بكود وكالة ترويجي لتقاسم العمولات، وكشف حساب أسبوعي وصرف الأرباح. تم استلام APK v1.2.0 وتدقيق لوحة الأدمن، ومطلوب حسم استلام سورس Flutter الكامل ومفاتيح التوقيع Keystore وربط خطوط المحافظات الستة 4Mbps من WE.',
+      'منصة Marketplace إلكترونية ("وكالة – سوق النخبة الذكي: بيع، مزاد، ومقايضة") تستهدف الأفراد والتجار والمتاجر وأصحاب المنتجات. تتكون من 5 وحدات أساسية: الإعلانات المبوبة والبيع المباشر، Buy Now، المزادات (Auctions)، المقايضة (Barter)، وصفحات التجار الموثقين — دون ربطها حالياً بهيكل عمولات أو تشغيل نهائي معتمد.',
     repo_url: 'https://github.com/mashweer/wekala-fleet-management',
     figma_url: 'https://www.figma.com/design/oYxkmwZcGae674BRA5ZOen/Wikala',
     live_url: 'https://wekala.mashawer.com.eg',
     apk_files: [
-      { id: 'apk-w-1', version: 'v1.2.0', buildNumber: 12, fileName: 'Wekala_v1.2.apk', fileSize: '28.7 MB', status: 'تم تدقيق لوحة الإدارة' },
+      { id: 'apk-w-1', version: 'v1.2.0', buildNumber: 12, fileName: 'Wekala_v1.2.apk', fileSize: '28.7 MB', status: 'يحتاج تحققاً ومطابقة مع السورس الفعلي' },
     ],
     context_hints: [
-      'يُكتب بالإنجليزية WeKaLa',
-      'ضرورة استلام Keystore من المطور قبل الدفعة الأخيرة',
-      'يستخدم Flutter + Twilio/Paymob/Stripe/Agora + Google Cloud Vision',
+      'يُكتب بالإنجليزية WeKaLa ويعمل بنموذج Marketplace (بيع، مزاد، مقاىضة) وليس تطبيق إدارة مناديب أو رحلات',
+      'نسب العمولات، رسوم الإعلانات، سياسات الدفع والضمان، وهيكلة فريق التشغيل غير محسومة نهائياً وتحتاج تحققاً بعد إطلاق 4B',
+      'ضرورة استلام السورس كود الكامل ومفاتيح Keystore رسمياً ضمن تسوية قيمة تك',
     ],
     db_info: {
-      engine: 'PostgreSQL / MongoDB + Redis',
-      tables: ['agencies', 'branch_managers', 'fleet_vehicles', 'captain_assignments', 'agent_commissions', 'documents', 'wallets'],
+      engine: 'غير معتمد نهائياً لحين تسليم 4B (متوقع Node.js/MongoDB أو PostgreSQL)',
+      tables: ['listings', 'buy_now_orders', 'auctions', 'barter_offers', 'verified_merchants', 'escrow_ledger'],
     },
   },
   {
@@ -329,20 +374,22 @@ export const MESHAWIR_PROJECTS: MeshawirProject[] = [
     code: 'MAADI-HQ-IT',
     category: 'بنية تحتية',
     status: 'في الإنتاج والتشغيل الفعلي',
+    knowledge_status: 'مؤكد',
+    priority_tier: 'بنية مقر المعادي (مُفعّل)',
     figma_completion_pct: 100,
     description:
-      'المقر الرئيسي بالمعراج المعادي بقيادة المهندس عماد الشرقاوي كمدير للفرع: راك Perla 27U، جدار الحماية والراوتر TP-Link ER8411 (شغال فعلياً يدمج خط أرضي WE ADSL + خط Vodafone 5G)، سنترال Grandstream 604A (شغال فعلياً بالخط الأرضي الثاني)، سويتش سيسكو 3850 48P، سيرفر Dell R640، محطتي HP Z440، 16 كاميرا 5MP + NVR 4K، جهاز البصمة ZKTeco، طابعة HP M404n، و3 أجهزة ديل مكتبية (التوسع لـ 8 ثم 17 مكتباً).',
+      'المقر الرئيسي بالمعراج المعادي بقيادة المهندس عماد الشرقاوي كمدير للفرع: راك Perla 27U، جدار الحماية والراوتر TP-Link ER8411 (شغال فعلياً يدمج خط أرضي WE ADSL + خط Vodafone 5G + تخطيط WireGuard VPN لـ 25–30 موظفاً عن بُعد)، سنترال Grandstream 604A (شغال فعلياً بالخط الأرضي الثاني)، قرار شراء Static Public IP من مزود الخدمة، سويتش سيسكو 3850 48P، سيرفر Dell R640، محطتي HP Z440، 16 كاميرا 5MP + NVR 4K، و3 أجهزة ديل مكتبية.',
     repo_url: 'https://github.com/mashweer/maadi-infrastructure',
     figma_url: '',
     live_url: 'https://mashawer.com.eg',
     apk_files: [],
     context_hints: [
-      'تم إلغاء Active Directory المحلي والاعتماد على Workgroup + Zoho + Proxmox/OPNsense + خزنة نسخ ليلي 3:00 ص',
-      'تم شراء وتشغيل TP-Link ER8411 و Grandstream 604A فعلياً',
-      'مطلوب استكمال شراء UPS 1500VA وتكييف غرفة السيرفرات',
+      'القرار الأحدث (مؤكد): شراء Static Public IP من مزود الخدمة (يتجاوز الاعتماد على DDNS القديم)',
+      'حالة العمل عن بُعد (قيد التنفيذ/يحتاج تحققاً): دراسة WireGuard VPN على ER8411 لـ 25–30 موظفاً باستخدام Grandstream Wave مع عزل الوصول للسنترال فقط',
+      'أصل تاريخي موثق (يحتاج تحققاً من وضعه الحالي): ذكر خادم Dell PowerEdge R730 + Windows Server Standard + 20 CALs في مرحلة سابقة — لا يُخلط مع R640 الجديد',
     ],
     db_info: {
-      engine: 'Proxmox VE 8.x + TP-Link ER8411 + Cisco IOS-XE',
+      engine: 'Proxmox VE 8.x + TP-Link ER8411 (Static IP + WireGuard) + Cisco IOS-XE',
       tables: ['vlans', 'firewall_rules', 'pbx_extensions', 'nvr_streams', 'dhcp_leases', 'rack_ports'],
     },
   },
@@ -352,10 +399,12 @@ export const MESHAWIR_PROJECTS: MeshawirProject[] = [
     name: 'غرفة عمليات ومراقبة 4B (4B Operations NOC)',
     code: '4B-OPS-NOC',
     category: 'عمليات وتشغيل',
-    status: 'في الإنتاج',
+    status: 'في الإنتاج والتجهيز',
+    knowledge_status: 'قيد التنفيذ',
+    priority_tier: 'تشغيل 4B بالمعادي',
     figma_completion_pct: 100,
     description:
-      'غرفة العمليات المركزية بالمعادي بقيادة م/ موفق وم/ عمرو وفريق الكول سنتر الخماسي ومحلل البيانات: تتابع لحظياً خوادم WE السحابية الثلاثة (4B-App, 4B-DB, 4B-Cache)، جدار F5 WAF، دوائر الفايبر وLTRA، والرد على مكالمات العملاء والكباتن عبر سنترال Grandstream 604A.',
+      'غرفة العمليات المركزية بالمعادي بقيادة م/ موفق وم/ عمرو وفريق الكول سنتر ومحلل البيانات: تتابع لحظياً خوادم WE السحابية الثلاثة (4B-App, 4B-DB, 4B-Cache)، جدار F5 WAF، دوائر الفايبر وLTRA، والرد على مكالمات العملاء والكباتن عبر سنترال Grandstream 604A وWave.',
     repo_url: 'https://github.com/mashweer/4b-operations-noc',
     figma_url: '',
     live_url: 'https://ops.mashawer.com.eg',
@@ -373,6 +422,8 @@ export const MESHAWIR_PROJECTS: MeshawirProject[] = [
     code: 'KAGGLE-UCP',
     category: 'أبحاث وذكاء',
     status: 'جاري التنفيذ (موعد 17 أكتوبر)',
+    knowledge_status: 'قيد التنفيذ',
+    priority_tier: 'مسار بحثي مستقل',
     figma_completion_pct: 90,
     description:
       'مشروع بحثي يقوده المهندس سامح يس في مسار Paper Track ($100,000) على Kaggle بالتنسيق مع معايير Ryan Holbrook، قبل 17 أكتوبر. يقوم على فلسفة الأسد الأبيض وبروتوكول UCP-LLM من 25 قسماً وتدريب Gemma 4 بـ LoRA/Unsloth وأداة Eve v1.1.0.',
@@ -386,10 +437,12 @@ export const MESHAWIR_PROJECTS: MeshawirProject[] = [
   {
     id: 'proj-agouza-restaurant',
     enterprise_id: 'ent-mashawer',
-    name: 'مشروع مطعم المشويات بالعجوزة (توريدات POS وCCTV)',
+    name: 'مشروع مطعم المشويات بالعجوزة (توريدات POS وCCTV — مفصول مالياً)',
     code: 'AGOUZA-REST',
     category: 'مشروعات جانبية',
-    status: 'في التأسيس والتوريد',
+    status: 'في التأسيس والتوريد (حسابات مفصولة تماماً عن مشاوير)',
+    knowledge_status: 'قيد التنفيذ',
+    priority_tier: 'مفصول مالياً عن مشاوير',
     figma_completion_pct: 100,
     description:
       'مشروع تجاري مملوك لأبو خالد تحت الإدارة التنفيذية الحصرية للأستاذ هاني (CFO)، مع توحيد المشتريات التقنية مع المهندس علي (شركة الأصدقاء): نظام كاشير POS، درج نقدية، طابعات مطبخ وفواتير، و14 كاميرا مراقبة بالمشاهدة عن بعد، مع فصل حساباته تماماً عن مشاوير.',
@@ -397,24 +450,26 @@ export const MESHAWIR_PROJECTS: MeshawirProject[] = [
     figma_url: '',
     live_url: '',
     apk_files: [],
-    context_hints: ['إمكانية ربط توصيل طلبات المطعم لاحقاً بأسطول 4B أو دارو'],
+    context_hints: ['فصل مالي وقانوني وتشغيلي كامل عن شركة مشاوير و4B', 'إمكانية ربط توصيل طلبات المطعم لاحقاً بأسطول 4B'],
     db_info: {},
   },
   {
     id: 'proj-app4-future',
     enterprise_id: 'ent-mashawer',
-    name: 'التطبيق الرابع الاحتمالي والشركة التابعة التكنولوجية',
+    name: 'التطبيق الرابع الاحتمالي + الشركة التابعة / المصرية الكويتية (مقترحات غير معتمدة)',
     code: 'APP4-SUBSIDIARY',
-    category: 'توسع مستقبلي',
-    status: 'قيد الدراسة والتخطيط',
+    category: 'مقترحات مستقبلية',
+    status: 'مقترح قيد الدراسة — لم يُعتمد كقرار رسمي بعد',
+    knowledge_status: 'مقترح',
+    priority_tier: 'مقترح غير معتمد',
     figma_completion_pct: 0,
     description:
-      'فكرة التطبيق الرابع تحت التقييم مع المطورين، ومقترح تأسيس الشركة التابعة خارج القاهرة لأبو خالد والمهندس سامح يس بـ 10 أهداف استراتيجية وهيكل 4 مهندسين + 2 استشاريين.',
+      'يضم الأفكار التوسعية غير المعتمدة نهائياً: مقترح الشركة التابعة خارج القاهرة، مقترح الشركة المصرية الكويتية لتوطين التكنولوجيا، وفكرة التطبيق الرابع. جميعها مصنفة «مقترح» ولا تُدرج كأصول قائمة.',
     repo_url: '',
     figma_url: '',
     live_url: '',
     apk_files: [],
-    context_hints: [],
+    context_hints: ['التصنيف الملزم: مقترح / قيد الدراسة — لا يُعامل كأمر واقع'],
     db_info: {},
   },
 ];
@@ -691,34 +746,483 @@ export const MESHAWIR_KAGGLE = {
 };
 
 export const MESHAWIR_TASKS: ProjectTaskItem[] = [
-  { id: 't-01', task_number: 1, project_id: 'proj-maadi-hq', category: 'تسليم إدارة الفرع للمهندس عماد', title: 'استلام إدارة فرع المعادي كاملة (الصلاحيات، 2FA، الباسوردات عبر الخزنة المشفرة، ومفاتيح الغرفة والراك)', description: 'نقل صلاحيات WE وEC وZoho وGitHub وSupabase وTP-Link ER8411 وGrandstream 604A للمهندس عماد الشرقاوي.', priority: 'عاجلة جداً', status: 'in_progress', assigned_to: 'المهندس عماد الشرقاوي والمهندس سامح يس' },
-  { id: 't-02', task_number: 2, project_id: 'proj-maadi-hq', category: 'الشبكات والفايروول الجديد', title: 'اعتماد توثيق وضبط سياسات TP-Link ER8411 المشتَرى فعلياً (خط أرضي 1 WE ADSL + Vodafone 5G + VLANs)', description: 'تأكيد قواعد التوجيه والـ Failover وتجهيز المنفذ الثالث لوصول خط فايبر WE L3VPN.', priority: 'عاجلة جداً', status: 'completed', assigned_to: 'المهندس عماد الشرقاوي والمهندس سامح يس' },
-  { id: 't-03', task_number: 3, project_id: 'proj-maadi-hq', category: 'السنترال الجراند ستريم 604A', title: 'إتمام إعدادات التحويلات (100-116)، رسالة IVR، طابور الكول سنتر، وتسجيل المكالمات على Grandstream 604A', description: 'السنترال راكب وشغال مع الخط الأرضي الثاني؛ مطلوب إغلاق تذكرة MSH-IT-2026-084 وأخذ نسخة Backup.', priority: 'عاجلة جداً', status: 'in_progress', assigned_to: 'المهندس عماد الشرقاوي وم/ موفق' },
-  { id: 't-04', task_number: 4, project_id: 'proj-maadi-hq', category: 'عتاد واستكمال غرفة السيرفرات', title: 'شراء UPS 1500VA وتكييف 24/7 لغرفة السيرفرات + طفاية حريق غازية + 5 أجهزة Dell إضافية للكول سنتر', description: 'استكمال أمان الغرفة وتشغيل 8 مقاعد فورية في القاعة الكبرى ثم التوسع إلى 17.', priority: 'عاجلة جداً', status: 'pending', assigned_to: 'المهندس عماد الشرقاوي والأستاذ هاني' },
-  { id: 't-05', task_number: 5, project_id: 'proj-maadi-hq', category: 'تمديدات المقر والكاميرات', title: 'إنهاء تأريج نقاط القاعة الـ 17 مع حاتم الفني، وإنهاء تركيب 16 كاميرا 5MP (منها 4 صوتية) مع م/ علي', description: 'ربط الكاميرات على VLAN 20 وتفعيل Hik-Connect للقيادات.', priority: 'عاجلة جداً', status: 'in_progress', assigned_to: 'المهندس عماد الشرقاوي وحاتم وم/ علي' },
-  { id: 't-06', task_number: 6, project_id: 'proj-maadi-hq', category: 'الشؤون المالية والفواتير', title: 'تحويل إذن المنشاوي النقدي المؤقت (8,510 ج.م) لفاتورة ضريبية ETA واستخراج فيزا الشركة الرسمية', description: 'إقفال العهدة ومراجعة فرق البنود وتجديد نطاق mashawer.com.eg لسنتين.', priority: 'عالية', status: 'in_progress', assigned_to: 'الأستاذ هاني والمهندس سامح يس' },
-  { id: 't-07', task_number: 7, project_id: 'proj-4b', category: 'استضافة WE والـ VPN والتراخيص', title: 'استلام الـ 3 خوادم السحابية + F5 WAF + 7 حسابات SSL VPN + فايبر 24Mbps + ربط LTRA وتجربة الفشل DR (< 5ms)', description: 'تنسيق مباشر مع م/ أحمد محرم وم/ أحمد غريب في WE والمحامي أ/ محمد مصطفى.', priority: 'عاجلة جداً', status: 'in_progress', assigned_to: 'المهندس عماد الشرقاوي وم/ أحمد محرم والمحامي' },
-  { id: 't-08', task_number: 8, project_id: 'proj-4b', category: 'إغلاق الثغرات البرمجية لـ 4B', title: 'إلزام قيمة تك بإدارة حالة الرحلة والسعر من السيرفر، مؤقت 60ث للـ OTP، انتهاء المزايدة 15ث، وتأمين Webhook فوري', description: 'وإصلاح FCM OAuth2 وخريطة Google Maps للأدمن وطوابير BullMQ ونشر CompreFace محلياً.', priority: 'عاجلة جداً', status: 'in_progress', assigned_to: 'المهندس سامح يس وم/ علي QA وقيمة تك' },
-  { id: 't-09', task_number: 9, project_id: 'proj-daro', category: 'تطوير وتشغيل تطبيق دارو Daro', title: 'استكمال شاشات فيجما الـ 30% + باركود Code128/QR بـ 3 نقاط مسح + محفظة COD + حسم Handheld مقابل ML Kit', description: 'وتجهيز ملف دراسة التوسع المستقبلي لمشروع دارو لندن.', priority: 'عالية', status: 'in_progress', assigned_to: 'المهندس سامح يس وأبو خالد وقيمة تك' },
-  { id: 't-10', task_number: 10, project_id: 'proj-wekala', category: 'استكمال وكالة WeKaLa', title: 'استلام سورس كود Flutter ومفاتيح Keystore وتأمين شهادة المنشأ لتسجيل wikala.com.eg', description: 'ربط خطوط فروع المحافظات الستة 4Mbps عند تشغيل الوكلاء.', priority: 'عالية', status: 'pending', assigned_to: 'المهندس سامح يس والمحامي' },
-  { id: 't-11', task_number: 11, project_id: 'proj-maadi-hq', category: 'خزنة النسخ الاحتياطي الليلي', title: 'برمجة سحب نسخة ليلية تلقائية الساعة 3:00 ص من سحابة WE وGitHub إلى R640 / Z440 محلياً بالمعادي', description: 'مع نسخة أسبوعية احتياطية إضافية وإلغاء Active Directory المحلي نهائياً.', priority: 'عالية', status: 'pending', assigned_to: 'المهندس عماد الشرقاوي والمهندس سامح يس' },
-  { id: 't-12', task_number: 12, project_id: 'proj-agouza-restaurant', category: 'توريدات مطعم العجوزة', title: 'اعتماد وتركيب نظام POS الكاشير والطابعات و14 كاميرا مراقبة بمطعم العجوزة عبر م/ علي الأصدقاء', description: 'بإشراف الأستاذ هاني وأبو خالد مع فصل الحسابات تماماً عن مشاوير.', priority: 'متوسطة', status: 'in_progress', assigned_to: 'الأستاذ هاني وأبو خالد وم/ علي' },
-  { id: 't-13', task_number: 13, project_id: 'proj-kaggle-ucp', category: 'تسليم مسابقة كاجل ($100k)', title: 'إنهاء تجارب Gemma 4 LoRA/Unsloth والورقة البحثية The White Lion وبروتوكول UCP-LLM قبل 17 أكتوبر', description: 'مع الحفاظ على نسخ محلية منظمة وعدم تداخلها مع بيئة مشاوير.', priority: 'عاجلة جداً', status: 'in_progress', assigned_to: 'المهندس سامح يس' },
+  { id: 't-01', task_number: 1, project_id: 'proj-maadi-hq', category: 'تسليم إدارة الفرع للمهندس عماد', title: 'استلام إدارة فرع المعادي كاملة (الصلاحيات، 2FA، الباسوردات عبر الخزنة المشفرة، ومفاتيح الغرفة والراك)', description: 'نقل صلاحيات WE وEC وZoho وGitHub وSupabase وTP-Link ER8411 وGrandstream 604A للمهندس عماد الشرقاوي.', priority: 'عاجلة جداً', status: 'in_progress', assigned_to: 'المهندس عماد الشرقاوي والمهندس سامح يس', due_date: '2026-11-28' },
+  { id: 't-02', task_number: 2, project_id: 'proj-maadi-hq', category: 'الشبكات والفايروول الجديد', title: 'اعتماد توثيق وضبط سياسات TP-Link ER8411 المشتَرى فعلياً (خط أرضي 1 WE ADSL + Vodafone 5G + VLANs)', description: 'تأكيد قواعد التوجيه والـ Failover وتجهيز المنفذ الثالث لوصول خط فايبر WE L3VPN.', priority: 'عاجلة جداً', status: 'completed', assigned_to: 'المهندس عماد الشرقاوي والمهندس سامح يس', due_date: '2026-11-20' },
+  { id: 't-03', task_number: 3, project_id: 'proj-maadi-hq', category: 'السنترال الجراند ستريم 604A', title: 'إتمام إعدادات التحويلات (100-116)، رسالة IVR، طابور الكول سنتر، وتسجيل المكالمات على Grandstream 604A', description: 'السنترال راكب وشغال مع الخط الأرضي الثاني؛ مطلوب إغلاق تذكرة MSH-IT-2026-084 وأخذ نسخة Backup.', priority: 'عاجلة جداً', status: 'in_progress', assigned_to: 'المهندس عماد الشرقاوي وم/ موفق', due_date: '2026-11-29' },
+  { id: 't-04', task_number: 4, project_id: 'proj-maadi-hq', category: 'عتاد واستكمال غرفة السيرفرات', title: 'شراء UPS 1500VA وتكييف 24/7 لغرفة السيرفرات + طفاية حريق غازية + 5 أجهزة Dell إضافية للكول سنتر', description: 'استكمال أمان الغرفة وتشغيل 8 مقاعد فورية في القاعة الكبرى ثم التوسع إلى 17.', priority: 'عاجلة جداً', status: 'pending', assigned_to: 'المهندس عماد الشرقاوي والأستاذ هاني', due_date: '2026-11-18' },
+  { id: 't-05', task_number: 5, project_id: 'proj-maadi-hq', category: 'تمديدات المقر والكاميرات', title: 'إنهاء تأريج نقاط القاعة الـ 17 مع حاتم الفني، وإنهاء تركيب 16 كاميرا 5MP (منها 4 صوتية) مع م/ علي', description: 'ربط الكاميرات على VLAN 20 وتفعيل Hik-Connect للقيادات.', priority: 'عاجلة جداً', status: 'in_progress', assigned_to: 'المهندس عماد الشرقاوي وحاتم وم/ علي', due_date: '2026-12-01' },
+  { id: 't-06', task_number: 6, project_id: 'proj-maadi-hq', category: 'الشؤون المالية والفواتير', title: 'تحويل إذن المنشاوي النقدي المؤقت (8,510 ج.م) لفاتورة ضريبية ETA واستخراج فيزا الشركة الرسمية', description: 'إقفال العهدة ومراجعة فرق البنود وتجديد نطاق mashawer.com.eg لسنتين.', priority: 'عالية', status: 'in_progress', assigned_to: 'الأستاذ هاني والمهندس سامح يس', due_date: '2026-11-27' },
+  { id: 't-07', task_number: 7, project_id: 'proj-4b', category: 'استضافة WE والـ VPN والتراخيص', title: 'استلام الـ 3 خوادم السحابية + F5 WAF + 7 حسابات SSL VPN + فايبر 24Mbps + ربط LTRA وتجربة الفشل DR (< 5ms)', description: 'تنسيق مباشر مع م/ أحمد محرم وم/ أحمد غريب في WE والمحامي أ/ محمد مصطفى.', priority: 'عاجلة جداً', status: 'in_progress', assigned_to: 'المهندس عماد الشرقاوي وم/ أحمد محرم والمحامي', due_date: '2026-11-30' },
+  { id: 't-08', task_number: 8, project_id: 'proj-4b', category: 'إغلاق الثغرات البرمجية لـ 4B', title: 'إلزام قيمة تك بإدارة حالة الرحلة والسعر من السيرفر، مؤقت 60ث للـ OTP، انتهاء المزايدة 15ث، وتأمين Webhook فوري', description: 'وإصلاح FCM OAuth2 وخريطة Google Maps للأدمن وطوابير BullMQ ونشر CompreFace محلياً.', priority: 'عاجلة جداً', status: 'in_progress', assigned_to: 'المهندس سامح يس وم/ علي QA وقيمة تك', due_date: '2026-11-26' },
+  { id: 't-09', task_number: 9, project_id: 'proj-daro', category: 'دارو Daro (مؤجل مؤقتاً بعد 4B)', title: 'معالجة ملاحظات Figma الـ 8 في تطبيق دارو للزوار والسياح وطيران مصر الداخلي بعد استلام وتشغيل 4B', description: 'حل تناقض الأسعار والأدوار الـ 5 وضمان طيران داخلي فقط داخل مصر (Amadeus / EgyptAir NDC) وتفعيل تدقيق قيمة تك بعد إعادة ضبط الـ Quota.', priority: 'عالية', status: 'pending', assigned_to: 'المهندس سامح يس وأبو خالد وقيمة تك', due_date: '2027-01-15' },
+  { id: 't-10', task_number: 10, project_id: 'proj-wekala', category: 'وكالة WeKaLa (مؤجل مؤقتاً بعد 4B)', title: 'استلام السورس كود وKeystore لسوق وكالة الإلكتروني (بيع/مزاد/مقايضة) وحسم العمولات والضمان بعد 4B', description: 'فصل نموذج Marketplace الكامل لـ WeKaLa عن تطبيقات النقل واعتماد العمولات مالياً لاحقاً.', priority: 'عالية', status: 'pending', assigned_to: 'المهندس سامح يس والأستاذ هاني والمحامي', due_date: '2027-01-10' },
+  { id: 't-11', task_number: 11, project_id: 'proj-maadi-hq', category: 'خزنة النسخ الاحتياطي الليلي', title: 'برمجة سحب نسخة ليلية تلقائية الساعة 3:00 ص من سحابة WE وGitHub إلى R640 / Z440 محلياً بالمعادي', description: 'مع نسخة أسبوعية احتياطية إضافية وإلغاء Active Directory المحلي نهائياً.', priority: 'عالية', status: 'pending', assigned_to: 'المهندس عماد الشرقاوي والمهندس سامح يس', due_date: '2026-12-05' },
+  { id: 't-12', task_number: 12, project_id: 'proj-agouza-restaurant', category: 'توريدات مطعم العجوزة', title: 'اعتماد وتركيب نظام POS الكاشير والطابعات و14 كاميرا مراقبة بمطعم العجوزة عبر م/ علي الأصدقاء', description: 'بإشراف الأستاذ هاني وأبو خالد مع فصل الحسابات تماماً عن مشاوير.', priority: 'متوسطة', status: 'in_progress', assigned_to: 'الأستاذ هاني وأبو خالد وم/ علي', due_date: '2026-12-10' },
+  { id: 't-13', task_number: 13, project_id: 'proj-kaggle-ucp', category: 'تسليم مسابقة كاجل ($100k)', title: 'إنهاء تجارب Gemma 4 LoRA/Unsloth والورقة البحثية The White Lion وبروتوكول UCP-LLM قبل 17 أكتوبر', description: 'مع الحفاظ على نسخ محلية منظمة وعدم تداخلها مع بيئة مشاوير.', priority: 'عاجلة جداً', status: 'in_progress', assigned_to: 'المهندس سامح يس', due_date: '2026-10-17' },
 ];
 
 export const MESHAWIR_INQUIRIES: SystemInquiryItem[] = [
-  { id: 'inq-01', question: 'ما هي خطة دمج TP-Link ER8411 مع جدار الحماية الافتراضي OPNsense؟', context: 'تم شراء وتشغيل TP-Link ER8411 فعلياً ليدير WE ADSL + Vodafone 5G كراوتر وفايروول', category: 'الشبكات والأمان', urgency: 'high', options: ['ER8411 كواجهة أساسية + OPNsense للفصل الداخلي', 'الاكتفاء بـ ER8411 كاملاً وتوفير موارد Z440'], answered: true, answer: 'ER8411 يعمل فعلياً كراوتر وفايروول أساسي لـ WAN1 (WE ADSL) وWAN2 (Vodafone 5G)، ويبقى OPNsense كخيار مساند/مختبر على Z440' },
-  { id: 'inq-02', question: 'كيف نغلق فجوات 4B قبل الإطلاق التجاري؟', context: 'نتائج فحص التسليم البرمجي لتطبيق 4B Passenger & Driver', category: 'تطبيق 4B', urgency: 'critical', options: ['تغطية FCM OAuth2 + Google Maps في الأدمن + BullMQ + NestJS 11 + CompreFace', 'التأجيل لما بعد الإطلاق'], answered: false, answer: null },
-  { id: 'inq-03', question: 'آلية مسح الباركود في محطات تطبيق دارو (Daro)', context: 'الاختيار بين كاميرا الهاتف بـ Google ML Kit أو أجهزة Handheld', category: 'تطبيق دارو', urgency: 'medium', options: ['Google ML Kit على هواتف المناديب مجاناً كبداية', 'شراء أجهزة Handheld ليزر للمستودعات'], answered: false, answer: null },
-  { id: 'inq-04', question: 'تحديد الإجراء القانوني مع شركة قيمة تك في حال التأخير', context: 'رغم وجود خطة الـ 7 أسابيع M1-M5', category: 'قانوني وتعاقدات', urgency: 'critical', options: ['توجيه إنذار رسمي على يد محضر', 'ملحق تسوية وجدولة مرتبط باستلام السورس والـ Keystore'], answered: false, answer: null },
-  { id: 'inq-05', question: 'حسم الترقية النهائية لكاميرات المعادي من 2MP إلى 5MP (16 كاميرا)', context: 'عرض الأصدقاء الأولي 55,050 ج.م (14 كاميرا 2MP) مقابل التغطية بـ 16 كاميرا 5MP و4 صوتية', category: 'كاميرات المراقبة', urgency: 'high', options: ['اعتماد 16 كاميرا 5MP و4 صوتية', 'الالتزام بعرض 14 كاميرا 2MP'], answered: true, answer: 'مخطط التغطية بـ 16 كاميرا 5MP منها 4 صوتية على VLAN 20' },
+  { id: 'inq-01', question: 'حسم عنوان الشبكة الخارجي للعمل عن بُعد (Static Public IP vs DDNS) لـ ER8411 وGrandstream Wave؟', context: 'الاتجاه الأحدث في 25 نوفمبر 2026: شراء Static Public IP من مزود الخدمة مع دراسة WireGuard VPN لـ 25–30 موظفاً عن بُعد على Wave', category: 'الشبكات والأمان والسنترال', urgency: 'critical', options: ['اعتماد Static Public IP + WireGuard VPN على ER8411 وعزل Wave للسنترال فقط', 'الاعتماد على DDNS / RemoteConnect دون Static IP'], answered: true, answer: 'القرار المعتمد: شراء Static Public IP ودراسة/تنفيذ WireGuard VPN على TP-Link ER8411 لـ 25–30 مستخدماً مع عزل SIP/RTP' },
+  { id: 'inq-02', question: 'كيف نغلق فجوات 4B قبل الإطلاق التجاري وتنفيذ GPS Integrity Test رقم 01؟', context: 'اختبار 23 نوفمبر تم على محاكي API 37 ولا يثبت أمان GPS الحقيقي ولا يعوّض تجربة كابتن + عميل على هاتف حقيقي', category: 'تطبيق 4B وكابتن مشاوير', urgency: 'critical', options: ['تنفيذ GPS Integrity Test 01 على هاتف حقيقي + اختبار رحلة كاملة + إغلاق FCM/Maps/Fawry/CompreFace', 'الاعتماد على نتائج المحاكي الحالية'], answered: false, answer: null },
+  { id: 'inq-03', question: 'نطاق إطلاق دارو (Daro Super App للزوار والسياح) ومشاكل Figma الـ 8', context: 'Daro موجه للزوار العرب والسياح وطيرانه داخلي داخل مصر فقط (Amadeus / EgyptAir NDC)، ومؤجل لحين استلام 4B', category: 'تطبيق دارو (مؤجل)', urgency: 'medium', options: ['إبقاء Daro مؤجلاً حتى تشغيل 4B ثم حل الـ 8 عيوب في Figma', 'تشغيل مسار تطوير موازٍ الآن'], answered: true, answer: 'مؤجل مؤقتاً حتى استلام وتشغيل 4B والتركيز الكامل بالمعادي على 4B' },
+  { id: 'inq-04', question: 'تحديد الإجراء القانوني والتقني مع شركة قيمة تك واستلام الأصول الـ 12', context: 'متابعة تسليم السورس كود الفعلي ومفاتيح Keystore وAPNs .p8 وأكواد Daro وWeKaLa', category: 'قانوني وحوكمة الأصول', urgency: 'critical', options: ['ربط أي دفعات بتسليم الأصول الـ 12 والـ Keystore فعلياً أو إنذار محضر', 'ملحق جدولة جديد دون تسليم الكود الآن'], answered: false, answer: null },
+  { id: 'inq-05', question: 'تأكيد نطاق وحجم تمويل 4B Prepaid Trips وعرض لامبادا/Ocean Foods', context: 'السابقة التاريخية (100,000 ج.م / 1,000 كوبون بحد أقصى 90 ج.م) لا يثبت توقيع عقد نهائي حتى الآن', category: 'المسار التجاري B2B', urgency: 'high', options: ['حسم التعاقد الرسمي والفصل المحاسبي السبعـي مع CFO أ/ هاني', 'إبقاؤها قيد التطوير دون طرح تجاري'], answered: false, answer: null },
 ];
+
+// ==============================================================================
+// EXTENDED REFERENCE DATASETS FROM SEED DOCUMENT (25 NOV 2026)
+// ==============================================================================
+
+export interface GovernanceRoleBoundary {
+  officialTitle: string;
+  governancePrinciple: string;
+  included11: string[];
+  excluded5: string[];
+}
+
+export const SAMEH_ROLE_BOUNDARY: GovernanceRoleBoundary = {
+  officialTitle: 'مدير قطاع التكنولوجيا وإدارة المشروعات الرقمية',
+  governancePrinciple: 'فصل إداري ورقابي حاسم بين «الاعتماد الفني والتقني» (القطاع التكنولوجي) و«الاعتماد المالي والتعاقدي» (الإدارة المالية CFO والمالك والمستشار القانوني).',
+  included11: [
+    '1. الإشراف التقني الكامل على المنظومات والتطبيقات الرقمية (4B / كابتن مشاوير / Daro / WeKaLa).',
+    '2. إدارة المشروعات الرقمية والربط بين الإدارة وشركات التطوير والمطورين وفرق التنفيذ.',
+    '3. مراجعة المخرجات البرمجية والأكواد وواجهات الربط APIs وأنظمة الإدارة وقواعد البيانات.',
+    '4. وضع وضبط متطلبات الأمان والحماية والصلاحيات وحوكمة التطوير.',
+    '5. الإشراف على البنية التحتية الرقمية والسيرفرات والشبكات والاستضافة والتخزين والنسخ الاحتياطي.',
+    '6. اعتماد الجاهزية الفنية والتكامل مع الخدمات الخارجية قبل الانتقال إلى الإنتاج.',
+    '7. إدارة مسارات الاختبار والجودة ومطابقة التصميمات مع المطورين (Figma ↔ Code).',
+    '8. حصر واستلام الأصول التقنية والبرمجية والحسابات والمفاتيح والشهادات والمستودعات.',
+    '9. إعداد التوصيف الوظيفي والفني وتقييم البدائل والحلول التكنولوجية.',
+    '10. تقديم تقارير حالة ومخاطر وتوصيات تقنية وإدارية صريحة وموثقة للإدارة العليا.',
+    '11. تمثيل الشركة فنياً في المناقشات الهندسية مع شركاء التقنية والمزودين.',
+  ],
+  excluded5: [
+    '1. تحصيل أو استلام أموال أو التوقيع المالي المباشر في المعاملات التجارية.',
+    '2. إقرار أو تعديل البنود المالية النهائية أو تسعير الخدمات بشكل منفرد بدون الإدارة المالية والمالك.',
+    '3. صرف مستحقات السائقين/الكباتن أو إجراء التسويات البنكية والفواتير الضريبية (مسؤولية أ/ هاني CFO).',
+    '4. توقيع العقود التجارية أو الإعلانية أو تحمل التزامات قانونية باسم الشركة (مسؤولية المالك والمحامي).',
+    '5. استبدال الرأي المحاسبي/الضريبي أو الاعتماد القانوني النهائي للنماذج التعاقدية المؤقتة.',
+  ],
+};
+
+export interface FourBVehicleCategory {
+  id: string;
+  name: string;
+  serviceScope: string;
+  constraints: string;
+  verificationNote: string;
+  knowledgeStatus: KnowledgeStatus;
+}
+
+export const FOURB_VEHICLE_CATEGORIES: FourBVehicleCategory[] = [
+  {
+    id: 'veh-car',
+    name: 'ملاكي عادي و VIP',
+    serviceScope: 'نقل الركاب (Passenger Rides)',
+    constraints: 'تمييز تشغيلي وتسعيري بين فئتي عادي و VIP حسب مواصفات المركبة.',
+    verificationNote: 'تحديد فروق التسعير وسنة الصنع المعتمدة تشغيلياً يحتاج تحققاً.',
+    knowledgeStatus: 'يحتاج تحققاً',
+  },
+  {
+    id: 'veh-microbus',
+    name: 'ميكروباص / 7 راكب',
+    serviceScope: 'نقل ركاب جماعي + طرود كبيرة',
+    constraints: 'يُشترط سيارات 7 راكب حقيقية (أشير سابقاً لموديلات 2022 أو 2023 فأحدث كمعيار مرجعي).',
+    verificationNote: 'الحد الأدنى لسنة الصنع المعتمد رسمياً في الإنتاج غير محسوم ويحتاج تحققاً.',
+    knowledgeStatus: 'يحتاج تحققاً',
+  },
+  {
+    id: 'veh-moto',
+    name: 'دراجات نارية (Motorcycles)',
+    serviceScope: 'توصيل ركاب + طرود خفيفة',
+    constraints: 'نقل ركاب وطرود خفيفة وفق شروط الترخيص والحمولة.',
+    verificationNote: 'تفاصيل تسعير الكابتن والترخيص داخل التطبيق قيد المراجعة.',
+    knowledgeStatus: 'قيد التنفيذ',
+  },
+  {
+    id: 'veh-pickup',
+    name: 'نصف نقل (Pickup)',
+    serviceScope: 'نقل البضائع والطرود الثقيلة فقط',
+    constraints: 'قيد تشغيلي صارم: مخصصة للبضائع والطرود فقط ولا تقدم خدمة نقل ركاب أبداً!',
+    verificationNote: 'فصل مسارات البضائع عن مسارات الركاب إلزامي في كل التطبيق والمنطق البرمجي.',
+    knowledgeStatus: 'مؤكد',
+  },
+];
+
+export interface AppReviewLayer {
+  layerNumber: number;
+  name: string;
+  arabicFocus: string;
+}
+
+export const APP_REVIEW_7_LAYERS: AppReviewLayer[] = [
+  { layerNumber: 1, name: 'Business Requirements', arabicFocus: 'مطابقة متطلبات العمل ونطاق 4B/الكابتن دون خلط مع أفكار غير معتمدة' },
+  { layerNumber: 2, name: 'UI/UX', arabicFocus: 'تجربة المستخدم وتدفق الرحلة (Home → Booking → Confirmation) وتوحيد الأسماء والأرقام' },
+  { layerNumber: 3, name: 'Design & Screens', arabicFocus: 'مطابقة Figma الفعلية — وجود الشاشة في Figma لا يعني وجود كود Backend حي' },
+  { layerNumber: 4, name: 'Business Logic', arabicFocus: 'قواعد Add Stop، فئات المركبات الأربع، احتساب الأجرة، وفصل المحاسبة السبعي' },
+  { layerNumber: 5, name: 'Engineering', arabicFocus: 'جودة Backend/Frontend/API، قاعدة البيانات، ومنع التلاعب من جهة العميل' },
+  { layerNumber: 6, name: 'QA & Testing', arabicFocus: 'اختبار حقيقي على هواتف Android/iOS (بعيداً عن المحاكي API 37)' },
+  { layerNumber: 7, name: 'Security, Privacy & Compliance', arabicFocus: 'أمان GPS (Test 01)، حفظ CompreFace داخل مصر، مفاتيح APNs/Keystore، وحماية البيانات 151/2018' },
+];
+
+export interface PrepaidTripsReference {
+  workingName: string;
+  draftName: string;
+  domainClarification: string;
+  couponLengths: number[];
+  targetUseCases: string[];
+  dashboardControls9: string[];
+  accountingMetrics7: Array<{ key: string; label: string; rule: string }>;
+  precedentExample: {
+    partnerName: string;
+    budgetEgp: number;
+    couponCount: number;
+    maxCouponValueEgp: number;
+    signedContractStatus: string;
+    note: string;
+  };
+  sampleModelsUnapproved: Array<{
+    name: string;
+    totalEgp: number;
+    opsCostEgp: number;
+    ridesOrPromoEgp: number;
+    durationOrTerms: string;
+    status: KnowledgeStatus;
+  }>;
+}
+
+export const FOURB_PREPAID_TRIPS_DATA: PrepaidTripsReference = {
+  workingName: '4B Prepaid Trips (الاسم التطويري العملي)',
+  draftName: '4B Digital Trips (اسم مسودة سابقة)',
+  domainClarification:
+    'منظومة B2B لبيع باقات وكوبونات رحلات مسبقة الدفع للشركات والمؤسسات وإتاحة الدفع المؤسسي وإدارة الكوبونات عبر لوحة التحكم — وليست وكالة دعاية أو إعلانات أو خدمات إبداعية.',
+  couponLengths: [10, 20, 50, 100],
+  targetUseCases: [
+    '1. تنقل الموظفين (Employee Mobility)',
+    '2. مزايا العملاء (Customer Benefits)',
+    '3. تنقل الفعاليات (Event Mobility)',
+    '4. حوافز المبيعات (Sales Incentives)',
+    '5. رحلات الضيوف والزوار (Guest Trips)',
+  ],
+  dashboardControls9: [
+    '1. تفعيل / إيقاف الكوبون أو الحزمة',
+    '2. تحديد فئة السيارة المسموحة (بدون خلط Pickup مع الركاب)',
+    '3. مدة الصلاحية الزمنية',
+    '4. عدد مرات الاستخدام',
+    '5. الحد الأقصى لقيمة الخصم/الكوبون',
+    '6. نسبة الخصم % أو القيمة الثابتة',
+    '7. استهداف العميل / الحملة / الجهة المتعاقدة',
+    '8. التوزيع الآلي لـ 100 كوبون يومي فريد ليوم واحد لكل دفعة',
+    '9. الوسم التجاري والمصدر المحاسبي للتمويل',
+  ],
+  accountingMetrics7: [
+    { key: 'sold_value', label: '1. القيمة المباعة مسبقاً (Sold Value)', rule: 'إجمالي ما سددته الشركة المتعاقدة مقابل باقة الكوبونات.' },
+    { key: 'discount_4b', label: '2. الخصومات الممولة من 4B', rule: 'تُحسب كمصروف ترويجي على الشركة لا يُخلط مع خصم المشتري.' },
+    { key: 'discount_buyer', label: '3. الخصومات الممولة من المشتري / الشريك', rule: 'تُخصم مباشرة من رصيد الجهة المشترية المتفق عليه.' },
+    { key: 'captain_dues', label: '4. مستحقات الكباتن (Captain Dues)', rule: 'التزام مباشر واجب السداد للكابتن منفصل عن إيراد المنصة.' },
+    { key: 'issuance_fees', label: '5. رسوم الإصدار والتشغيل (Issuance / Ops Fees)', rule: 'أتعاب إدارة الحملة/الإصدار المحصلة من الشريك.' },
+    { key: 'recognized_revenue', label: '6. الإيرادات المحققة (Recognized Revenue)', rule: 'تُعترف محاسبياً عند الاستخدام الفعلي للرحلات فقط وفق القواعد المالية.' },
+    { key: 'unused_balance', label: '7. الأرصدة غير المستخدمة (Unused / Breakage Balance)', rule: 'تبقى التزاماً مالياً/رصيداً قائماً لا يُعامل كربح فوري قبل استيفاء شروط العقد.' },
+  ],
+  precedentExample: {
+    partnerName: 'سوق لامبادا / أوشن فودز (Ocean Foods)',
+    budgetEgp: 100000,
+    couponCount: 1000,
+    maxCouponValueEgp: 90,
+    signedContractStatus: 'لا يوجد إثبات على توقيع عقد نهائي مكتمل أو تسعير معتمد نهائياً حتى 25 نوفمبر 2026 — يحتاج تحققاً.',
+    note: 'ذُكر كسابقة تفاوضية/مرجعية: 100 ألف جنيه، 1,000 كوبون بحد أقصى 90 ج.م للكوبون، مع مقترح 100 كوبون يومي فريد ليوم واحد.',
+  },
+  sampleModelsUnapproved: [
+    { name: 'نموذج حملة 100 ألف ج.م', totalEgp: 100000, opsCostEgp: 10000, ridesOrPromoEgp: 90000, durationOrTerms: '10,000 تشغيل + 90,000 رحلات (مثال استرشادي)', status: 'مقترح' },
+    { name: 'نموذج حملة مليون ج.م (3 أشهر)', totalEgp: 1000000, opsCostEgp: 250000, ridesOrPromoEgp: 750000, durationOrTerms: '250 ألف تشغيل + 750 ألف رصيد ترويجي على 3 أشهر', status: 'مقترح' },
+    { name: 'نموذج الجوائز / القسائم 5%/95%', totalEgp: 100000, opsCostEgp: 5000, ridesOrPromoEgp: 95000, durationOrTerms: '5% رسوم إدارة + 95% قسائم رحلات', status: 'مقترح' },
+  ],
+};
+
+export interface DaroFigmaAuditData {
+  figmaUrl: string;
+  auditDate: string;
+  targetAudience: string;
+  flightConstraint: string;
+  autoAnalysisNote: string;
+  categories6: Array<{ id: string; title: string; details: string }>;
+  logicalRoles5: string[];
+  figmaPages9: string[];
+  defects8: Array<{ id: number; title: string; severity: string }>;
+}
+
+export const DARO_FIGMA_AUDIT: DaroFigmaAuditData = {
+  figmaUrl: 'https://www.figma.com/design/aR1aanpRzGL7aMoxROGgt5/Daro?node-id=3214-2',
+  auditDate: '2026-11-24',
+  targetAudience: 'الزوار العرب والسياح ورجال الأعمال والطلاب القادمين إلى مصر (لا يستهدف المصريين كشريحة تسويقية رئيسية).',
+  flightConstraint: 'الطيران يقتصر صراحةً على الطيران الداخلي داخل مصر فقط (Amadeus كخيار أولي وEgyptAir NDC/ERS قيد التحقق).',
+  autoAnalysisNote: 'توقفت المراجعة التلقائية في قيمة تك بعد ~44 دقيقة بسبب حد الـ Credit/Quota (يتجدد في 30 نوفمبر 2026).',
+  categories6: [
+    { id: 'cat-1', title: '1. الإقامة والعقارات', details: 'وحدات مملوكة/متعاقد عليها أو إيجار وعمولة مالك' },
+    { id: 'cat-2', title: '2. السيارات والنقل', details: 'سيارة بسائق أو بدون، توصيل مطار، رحلات بين المدن، وربط مع 4B' },
+    { id: 'cat-3', title: '3. الطيران والفنادق', details: 'طيران داخلي داخل مصر فقط + حجز فنادق' },
+    { id: 'cat-4', title: '4. المطاعم والأكل المنزلي', details: 'مطاعم + وجبات منزلية + طلب مسبق' },
+    { id: 'cat-5', title: '5. الخدمات الطبية', details: 'أطباء ومستشفيات وحجوزات ومواعيد' },
+    { id: 'cat-6', title: '6. خدمات مساندة أخرى', details: 'ترجمة، إرشاد سياحي، خدمات طلاب، تنظيف، وصيانة وفنيون' },
+  ],
+  logicalRoles5: [
+    '1. User (الزائر / العميل بحساب موحد)',
+    '2. Property Owner (مالك العقار)',
+    '3. Service Provider (مزود الخدمة والمطاعم والأكل المنزلي)',
+    '4. Medical Roles (الأدوار الطبية والعيادات والمستشفيات)',
+    '5. Admin (إدارة المنصة)',
+  ],
+  figmaPages9: ['User', 'Owner', 'Doctor', 'Real Estate', 'Cars', 'Airport Pickup', 'Flights', 'Food & Home Food', 'Medical / Students / Cleaning & Maintenance'],
+  defects8: [
+    { id: 1, title: 'أرقام مالية ونسب متضاربة في شاشات العقارات والخدمات (25,000 و3,200 و1,000 و40,000 و15% و10%).', severity: 'عالية' },
+    { id: 2, title: 'تواريخ عقود وشاشات متناقضة وغير محدثة (10 Mar 2024–2028).', severity: 'متوسطة' },
+    { id: 3, title: 'بنود دفع وشروط إيجار غير متسقة (13 شيك، شهر تأمين، شهر مجاني).', severity: 'عالية' },
+    { id: 4, title: 'عدم وضوح الفرق في الواجهة بين «حجز» مؤكد و«حجز مبدئي».', severity: 'عالية' },
+    { id: 5, title: 'انقطاع مسار الحجز القياسي: Home → Search → Details → Booking → Payment → Confirmation.', severity: 'حرجة' },
+    { id: 6, title: 'خلط شاشات الأدوار الخمسة داخل حساب موحد دون فصل صلاحيات واضح.', severity: 'متوسطة' },
+    { id: 7, title: 'توقف مراجعة قيمة تك التلقائية عند الدقيقة 44 قبل إتمام التدقيق الكامل.', severity: 'عالية' },
+    { id: 8, title: 'لا يوجد فريق تشغيل مستقل في المعادي حالياً لتشغيل Daro (مؤجل لبعد 4B).', severity: 'إداري' },
+  ],
+};
+
+export interface GpsSecurityTestSpec {
+  id: string;
+  disclaimer23Nov: string;
+  prerequisites5: string[];
+  checks9: Array<{ id: number; check: string; target: string }>;
+}
+
+export const GPS_SECURITY_TEST_01: GpsSecurityTestSpec = {
+  id: 'GPS Integrity Test رقم 01',
+  disclaimer23Nov:
+    'تجربة 23 نوفمبر 2026 (كابتن على محاكي Android Emulator API 37 + عميل على هاتف من الجاردينيا للمعادي وتحرك ~2 كم) أظهرت استجابة الخريطة فقط ولا تثبت مقاومة تزييف الـ GPS أو جاهزية الإنتاج!',
+  prerequisites5: [
+    '1. حساب كابتن تجريبي فعلي ومفعل.',
+    '2. حساب عميل تجريبي فعلي.',
+    '3. وصول حي إلى لوحة التحكم والإدارة (Dashboard).',
+    '4. هاتف أندرويد حقيقي غير معدل (وليس Emulator API 37).',
+    '5. تجربة دورة رحلة كاملة من الإنشاء حتى الإغلاق والتسوية.',
+  ],
+  checks9: [
+    { id: 1, check: 'ضبط Battery Saver OFF ووضع توفير الطاقة', target: 'منع قتل خدمة التتبع في الخلفية' },
+    { id: 2, check: 'ضبط Mock Location OFF ومنع تطبيقات التزييف', target: 'كشف وحجب برامج Fake GPS / Spoofing' },
+    { id: 3, check: 'مقارنة مسار GPS الحقيقي ميدانياً', target: 'تطابق الإحداثيات الزمنية على السيرفر' },
+    { id: 4, check: 'قياس دقة الإحداثيات Accuracy Threshold', target: 'رفض القفزات غير المنطقية في السرعة والموقع' },
+    { id: 5, check: 'فحص أذونات الموقع (Always / While in Use)', target: 'التعامل السليم مع رفض أو تقييد الإذن' },
+    { id: 6, check: 'الاستقرار في الخلفية Background Tracking', target: 'استمرار إرسال النبض عند إطفاء الشاشة' },
+    { id: 7, check: 'تبديل الشبكات (Wi-Fi ↔ 4G/5G)', target: 'إعادة الاتصال التلقائي عبر WebSocket/HTTP' },
+    { id: 8, check: 'انقطاع الشبكة المفاجئ وإعادة التشغيل Reboot', target: 'حفظ النقاط واستكمال الرحلة دون فقدان حالة' },
+    { id: 9, check: 'كشف Root والـ Debugging وأدوات الاختراق', target: 'إيقاف أو تنبيه عند اكتشاف بيئة محاكاة/روت' },
+  ],
+};
+
+export interface NetworkVpnWaveSpec {
+  staticPublicIpDecision: string;
+  staticIpStatus: KnowledgeStatus;
+  remoteWorkPlanTitle: string;
+  remoteWorkStatus: KnowledgeStatus;
+  concurrentUsersTarget: string;
+  waveSecurityRule: string;
+  isoSecurityNote: string;
+  historicalLegacyServerNote: string;
+  checklistSteps: string[];
+}
+
+export const NETWORK_VPN_WAVE_SPEC: NetworkVpnWaveSpec = {
+  staticPublicIpDecision: 'القرار الأحدث المعتمد: شراء Static Public IP من مزود الخدمة (يتجاوز مقترح Dynamic IP + DDNS السابق).',
+  staticIpStatus: 'مؤكد',
+  remoteWorkPlanTitle: 'دراسة وتنفيذ WireGuard VPN على راوتر TP-Link ER8411 لربط تطبيق Grandstream Wave للموظفين عن بُعد',
+  remoteWorkStatus: 'قيد التنفيذ',
+  concurrentUsersTarget: '25 – 30 مستخدماً (موظفي كول سنتر وتشغيل عن بُعد عبر Wave من المنزل أو خارجه)',
+  waveSecurityRule: 'عزل تام: الوصول عبر نفق WireGuard إلى خادم السنترال UCM6304A (VLAN 30) فقط — ممنوع فتح منافذ SIP/RTP للإنترنت العام أو الاعتماد على RemoteConnect وحده.',
+  isoSecurityNote: 'حزمة الأهداف الأمنية المستهدفة تشمل: FortiGate، VLAN Segmentation، VPN، Firewall Rules، استهداف تصنيف Grade A، وتوجيه نحو ISO 27001 (مع التنبيه الصريح: الشركة غير حاصلة على شهادة ISO 27001 حتى الآن).',
+  historicalLegacyServerNote: 'سجل تاريخي قديم يحتاج تحققاً: ورد في نقاشات سابقة وجود/خطط خادم Dell PowerEdge R730 مع Windows Server Standard + 20 CALs؛ يُحفظ كمرجع تاريخي منفصل عن R640 وHP Z440 الموجودين فعلياً في راك Perla 27U.',
+  checklistSteps: [
+    'تفعيل Static Public IP على خط WAN الأساسي في TP-Link ER8411.',
+    'تهيئة WireGuard VPN Server على ER8411 وتوزيع ملفات Config فردية.',
+    'توجيه حركة VPN في الـ Firewall إلى IP السنترال (192.168.30.1) فقط مع حظر باقي الـ VLANs.',
+    'ضبط حسابات SIP للمستخدمين عن بُعد (25–30 مستخدماً) على تطبيق Grandstream Wave ومراقبة استهلاك CPU/RAM في 604A.',
+  ],
+};
+
+export interface ExternalServiceItem {
+  id: string;
+  name: string;
+  role: string;
+  knowledgeStatus: KnowledgeStatus;
+  notes: string;
+}
+
+export const EXTERNAL_SERVICES_17: ExternalServiceItem[] = [
+  { id: 'ext-1', name: 'Firebase (FCM / Auth / Config)', role: 'إشعارات الدفع Android وiOS عبر FCM OAuth2', knowledgeStatus: 'قيد التنفيذ', notes: 'مطلوب استكمال ملفات Android/iOS ومفتاح APNs .p8' },
+  { id: 'ext-2', name: 'Google Maps Platform', role: 'الخرائط والتوجيه والمسافات في 4B والأدمن', knowledgeStatus: 'مؤكد', notes: 'تقييد Server Key بـ IP وWeb Key بالدومين' },
+  { id: 'ext-3', name: 'Google Play Console', role: 'حساب نشر تطبيقات الأندرويد (4B / كابتن)', knowledgeStatus: 'يحتاج تحققاً', notes: 'التحقق من ملكية الشركة وحالة النشر الفعلية' },
+  { id: 'ext-4', name: 'Apple Developer Account', role: 'حساب نشر تطبيقات iOS وشهادات APNs .p8', knowledgeStatus: 'يحتاج تحققاً', notes: 'التحقق من الدفع السنوي ورقم DUNS وتوليد .p8' },
+  { id: 'ext-5', name: 'Amadeus API', role: 'حجز الطيران الداخلي داخل مصر في Daro', knowledgeStatus: 'مؤجل', notes: 'مؤجل مع مشروع Daro — طيران داخلي بمصر فقط' },
+  { id: 'ext-6', name: 'EgyptAir NDC / ERS', role: 'ربط طيران مصر الداخلي البديل في Daro', knowledgeStatus: 'يحتاج تحققاً', notes: 'لم يبدأ الربط الفعلي بعد ومؤجل لما بعد 4B' },
+  { id: 'ext-7', name: 'Fawry Enterprise', role: 'الدفع الإلكتروني وصرف الكباتن لـ 4B', knowledgeStatus: 'قيد التنفيذ', notes: 'التعاقد وWebhook والاختبار الحي غير مكتملين بالكامل' },
+  { id: 'ext-8', name: 'Paymob', role: 'بوابة دفع إلكتروني مذكورة بالمنظومة', knowledgeStatus: 'يحتاج تحققاً', notes: 'غير مثبت تشغيلها الحي في الإنتاج حتى الآن' },
+  { id: 'ext-9', name: 'Vodafone Cash (API / Wallet)', role: 'محفظة إلكترونية في قائمة الدفع', knowledgeStatus: 'يحتاج تحققاً', notes: 'مذكورة كوسيلة دفع ولم يثبت تشغيلها الحي' },
+  { id: 'ext-10', name: 'InstaPay', role: 'تحويلات فورية مذكورة بالمتطلبات', knowledgeStatus: 'يحتاج تحققاً', notes: 'غير مثبت تشغيلها في الإنتاج بعد' },
+  { id: 'ext-11', name: 'OTP SMS Gateways (BroadNet / Twilio)', role: 'إرسال رموز التحقق للمستخدمين والكباتن', knowledgeStatus: 'قيد التنفيذ', notes: 'BroadNet وTwilio مسجلان — التحقق من الرصيد والـ Live API' },
+  { id: 'ext-12', name: 'Email Service (Zoho Lite / SMTP)', role: 'البريد الرسمي 5 حسابات وتنبيهات النظام', knowledgeStatus: 'مؤكد', notes: '5 حسابات مجانية فعالة؛ hr@ ملغي لتوفير التكلفة' },
+  { id: 'ext-13', name: 'Cloud / Hosting (WE Cloud / VPS / Docker)', role: 'استضافة خوادم الإنتاج وقاعدة البيانات inside Egypt', knowledgeStatus: 'مؤكد', notes: 'أوامر شراء WE معتمدة — متابعة الاستلام الفعلي' },
+  { id: 'ext-14', name: 'CompreFace (Face Verification + Liveness)', role: 'التحقق من هوية الكباتن على خوادم داخل مصر', knowledgeStatus: 'قيد التنفيذ', notes: 'Isolated VM + Docker + Ubuntu داخل WE/MIST + Internal VPN' },
+  { id: 'ext-15', name: 'WireGuard VPN', role: 'ربط الموظفين عن بُعد بأمان على راوتر ER8411', knowledgeStatus: 'قيد التنفيذ', notes: 'قيد التهيئة لدعم 25–30 مستخدم Wave' },
+  { id: 'ext-16', name: 'Grandstream UCM6304A & Wave', role: 'السنترال الفعلي بالمقر وتطبيق الهواتف عن بُعد', knowledgeStatus: 'مؤكد', notes: 'السنترال شغال بالمقر؛ ربط Wave عن بُعد قيد التنفيذ' },
+  { id: 'ext-17', name: 'TP-Link Omada ER8411', role: 'جدار الحماية والراوتر المركزي Multi-WAN', knowledgeStatus: 'مؤكد', notes: 'شغال بالمقر بـ WE ADSL + VF 5G ويهيأ لـ Static IP وWireGuard' },
+];
+
+export const FIREBASE_IOS_CHECKLIST = {
+  android: [
+    'ملف google-services.json الصحيح لكل Flavor / Package Name (4B عملاء مقابل كابتن مشاوير).',
+    'تشغيل flutterfire configure ومطابقة firebase_options.dart.',
+    'إضافة بصمات SHA-1 و SHA-256 لكل من Debug و Release Keystore.',
+    'تفعيل Firebase Cloud Messaging API (V1 / OAuth2) من الباك إند بدلاً من Legacy Key.',
+    'التعامل الدقيق مع Notification & Data Payloads أثناء Foreground و Background و Terminated.',
+    'طلب إذن الإشعارات وقت التشغيل في Android 13+ (POST_NOTIFICATIONS).',
+  ],
+  ios: [
+    'توليد مفتاح APNs Auth Key بصيغة (.p8) من Apple Developer مع توثيق Key ID و Team ID.',
+    'رفع مفتاح (.p8) إلى إعدادات Cloud Messaging في لوحة Firebase (يحظر تماماً رفع .p8 على GitHub!).',
+    'تضمين ملف GoogleService-Info.plist الصحيح داخل Xcode لكل Bundle Identifier.',
+    'تفعيل Capabilities داخل Xcode: Push Notifications + Background Modes (Remote notifications).',
+    'تجربة استلام الإشعار على جهاز iPhone حقيقي (وليس Simulator فقط).',
+  ],
+};
+
+export const DIGITAL_ASSETS_12: string[] = [
+  '1. السورس كود الكامل (4B العملاء + كابتن مشاوير + لوحة الإدارة + Daro + WeKaLa)',
+  '2. مستودعات GitHub وصلاحيات Owner للمؤسسة والإدارة التقنية',
+  '3. ملفات البيئات والتشغيل (Docker / docker-compose / .env Templates)',
+  '4. قواعد البيانات وملفات الهجرة والنسخ (Migrations & Schemas)',
+  '5. مفاتيح الـ APIs وحسابات الخدمات الـ 17 الخارجية',
+  '6. حسابات Google Play Console و Apple Developer الرسمية للشركة',
+  '7. مفاتيح التوقيع الرقمية والشهادات (Android Keystore + iOS .p8 / Certificates)',
+  '8. النطاقات وإدارة الـ DNS (mashawer.com.eg, mashweer.net, daro.eg, wikala.com.eg)',
+  '9. ملفات التصميم Figma وصلاحيات التعديل + أصول الهوية البصرية',
+  '10. لوحات التحكم الإدارية ومفاتيح الـ Super Admin',
+  '11. التوثيق التقني والعقود ومستخلصات قيمة تك',
+  '12. العلامات التجارية وحقوق الملكية الفكرية وإيداعات ITIDA',
+];
+
+export interface ProposedIdeaItem {
+  id: string;
+  name: string;
+  category: string;
+  status: KnowledgeStatus;
+  summary: string;
+  governanceNote: string;
+}
+
+export const PROPOSED_IDEAS_REGISTRY: ProposedIdeaItem[] = [
+  { id: 'prop-1', name: '4B Exchange', category: 'مقترح تجاري غير معتمد', status: 'مقترح', summary: 'فكرة تبادل وتكامل تجاري مقترحة للنقاش المستقبلي.', governanceNote: 'لم يُعتمد كموديل تشغيلي أو مشروع مبرمج.' },
+  { id: 'prop-2', name: '4B Route Club', category: 'مقترح تجاري غير معتمد', status: 'مقترح', summary: 'فكرة اشتراكات/نوادي خطوط مسار ثابتة.', governanceNote: 'مقترح غير معتمد؛ لم يُدرج في خطة إطلاق 4B الحالية.' },
+  { id: 'prop-3', name: '4B Guaranteed Ride', category: 'مقترح تجاري غير معتمد', status: 'مقترح', summary: 'فكرة ضمان توفر الرحلة مقابل التزام زمني أو اشتراك.', governanceNote: 'مقترح لم يُحسم قانونياً أو تشغيلياً.' },
+  { id: 'prop-4', name: '4B Neighborhood Logistics', category: 'مقترح تجاري غير معتمد', status: 'مقترح', summary: 'فكرة خدمات لوجستية محلية على مستوى الأحياء.', governanceNote: 'مقترح للنقاش بعد استقرار 4B.' },
+  { id: 'prop-5', name: '4B Shared Load (لا يُطرح كميزة جديدة)', category: 'مستبعد / مُغطى بـ Add Stop', status: 'مؤجل', summary: 'تمت تغطية منطق التوصيل متعدد التوقفات في رحلة واحدة فعلياً عبر ميزة Add Stop الموجودة.', governanceNote: 'قيد التقرير المرجعي: لا تقترح 4B Shared Load كميزة جديدة ما دام Add Stop يؤدي نفس المنطق.' },
+  { id: 'prop-6', name: 'الشركة المصرية الكويتية لتوطين التكنولوجيا + الشركة التابعة خارج القاهرة', category: 'مقترح هيكلي غير معتمد', status: 'مقترح', summary: 'تصور تأسيس كيان تكنولوجي موازٍ / شريك استثماري خارج القاهرة.', governanceNote: 'قيد الدراسة فقط مع المالك والمستشار القانوني.' },
+  { id: 'prop-7', name: 'الميزانيات الترويجية السابقة (45 ألف / 70 ألف / 25 ألف ج.م) ومسودات العقود الاسترشادية', category: 'بيانات تاريخية ومواد مؤقتة', status: 'يحتاج تحققاً', summary: 'أرقام حملات وتسويق جزئي ومسودات عقود مبدئية أُعدت للتحضير الداخلي فقط.', governanceNote: 'المسودات القانونية مؤقتة ولا تحل محل المراجعة القانونية؛ والميزانيات تحتاج اعتماداً محدثاً من CFO.' },
+];
+
+export interface VerificationMatrixItem {
+  id: string;
+  num: number;
+  category: string;
+  title: string;
+  status: KnowledgeStatus;
+  contextNote: string;
+  verificationNote: string;
+}
+
+export const VERIFICATION_MATRIX_30: VerificationMatrixItem[] = [
+  { id: 'v-01', num: 1, category: 'شركة التطوير والتنفيذ', title: 'وضع التعاقد الفعلي النهائي مع شركة التطوير (قيمة تك) ونسب السداد المتبقية', status: 'يحتاج تحققاً', contextNote: 'خطة 7 أسابيع M1–M5 وإنذار قيد الحسم', verificationNote: '' },
+  { id: 'v-02', num: 2, category: 'كود تطبيق 4B', title: 'استلام ومراجعة كود 4B العملاء الفعلي كاملاً ومقارنته مع Figma', status: 'قيد التنفيذ', contextNote: 'يُمنع الخلط بين اكتمال Figma (95%) وجاهزية الكود الحي', verificationNote: '' },
+  { id: 'v-03', num: 3, category: 'كود كابتن مشاوير', title: 'استلام ومراجعة كود تطبيق كابتن مشاوير الفعلي وفحص فجواته', status: 'قيد التنفيذ', contextNote: 'تطبيق مستقل عن تطبيق العملاء', verificationNote: '' },
+  { id: 'v-04', num: 4, category: 'أصول 4B ودارو ووكالة', title: 'الجرد الفعلي للأصول الرقمية الـ 12 (GitHub، السيرفرات، النطاقات، المتاجر، Keystore)', status: 'يحتاج تحققاً', contextNote: 'حاسم قبل سداد أي دفعة أخيرة للمطور الخارجي', verificationNote: '' },
+  { id: 'v-05', num: 5, category: 'تراخيص LTRA', title: 'الموقف التنفيذي الحالي لملف جهاز تنظيم النقل البري LTRA والربط الإلكتروني الفعلي', status: 'قيد التنفيذ', contextNote: 'قانون 87/2018 وقرار 2180/2019 عبر خوادم WE', verificationNote: '' },
+  { id: 'v-06', num: 6, category: 'أمان GPS', title: 'نتائج اختبار GPS Integrity Test رقم 01 على هاتف Android حقيقي بعيداً عن المحاكي', status: 'يحتاج تحققاً', contextNote: 'تجربة 23 نوفمبر على Emulator API 37 غير صالحة كإثبات أمان', verificationNote: '' },
+  { id: 'v-07', num: 7, category: 'اختبار الرحلة الكامل', title: 'تجربة رحلة حقيقية كاملة End-to-End بين كابتن وعميل ولوحة تحكم على أجهزة حقيقية', status: 'يحتاج تحققاً', contextNote: 'من الطلب حتى القبول والتنفيذ والانتهاء والتسوية', verificationNote: '' },
+  { id: 'v-08', num: 8, category: 'التحقق من الوجه CompreFace', title: 'جاهزية CompreFace وLiveness محلياً على WE / MIST + اعتماد مدة الاحتفاظ 1–3 أسابيع قانونياً', status: 'قيد التنفيذ', contextNote: 'Isolated VM + Docker + Ubuntu + Internal VPN + Firewall', verificationNote: '' },
+  { id: 'v-09', num: 9, category: 'إشعارات Firebase & APNs', title: 'تحقق عمل إشعارات الدفع على Android وiOS (مفتاح .p8 وعدم رفعه على GitHub + FCM OAuth2)', status: 'قيد التنفيذ', contextNote: 'اختبار iPhone فعلي في وضع Background و Terminated', verificationNote: '' },
+  { id: 'v-10', num: 10, category: 'فئات المركبات والأسعار', title: 'حسم فروق التسعير بين الملاكي العادي و VIP والحد الأدنى لسنة صنع 7 راكب (2022/2023+)', status: 'يحتاج تحققاً', contextNote: 'تأكيد منع ربط فئة Pickup برحلات الركاب داخل التطبيق', verificationNote: '' },
+  { id: 'v-11', num: 11, category: 'الاشتراكات والباقات', title: 'اعتماد باقات اشتراكات 4B الرسمية (الشرائح والأسعار والحدود)', status: 'يحتاج تحققاً', contextNote: 'واردة في قائمة المزايا دون أسعار معتمدة نهائياً', verificationNote: '' },
+  { id: 'v-12', num: 12, category: 'بوابات الدفع الإلكتروني', title: 'حالة الربط الحي والإنتاجي لكل من Fawry وPaymob وVodafone Cash وInstaPay', status: 'يحتاج تحققاً', contextNote: 'لم يثبت التشغيل الإنتاجي الكامل لأي منها حتى الآن', verificationNote: '' },
+  { id: 'v-13', num: 13, category: '4B Prepaid Trips', title: 'اعتماد الاسم الرسمي وشكل العقد والأسعار لمنظومة كوبونات الشركات B2B', status: 'قيد التنفيذ', contextNote: 'عدم الخلط مع 4B Digital Trips ولا مع وكالة إعلانات', verificationNote: '' },
+  { id: 'v-14', num: 14, category: 'سابقة لامبادا / Ocean Foods', title: 'التحقق من موقف التعاقد النهائي مع لامبادا / أوشن فودز (100 ألف / 1,000 كوبون)', status: 'يحتاج تحققاً', contextNote: 'لا يوجد حتى الآن إثبات لتوقيع عقد نهائي مكتمل', verificationNote: '' },
+  { id: 'v-15', num: 15, category: 'الفصل المحاسبي للكوبونات', title: 'تطبيق البنود المحاسبية السبعة في تقارير 4B Prepaid Trips بمراجعة المدير المالي', status: 'قيد التنفيذ', contextNote: 'فصل Sold / خصم 4B / خصم المشتري / الكباتن / الإصدار / الإيراد / غير المستخدم', verificationNote: '' },
+  { id: 'v-16', num: 16, category: 'تغطية Add Stop vs Shared Load', title: 'مراجعة تغطية Add Stop لكل سيناريوهات التوصيل متعدد المحطات دون ازدواج', status: 'مؤكد', contextNote: 'Add Stop قائمة فعلاً؛ Shared Load لا تُقترح كفكرة جديدة', verificationNote: '' },
+  { id: 'v-17', num: 17, category: 'وضع تشغيل المعادي وفريق التسويق', title: 'تحقق التعاقد الفعلي مع الـ 4 مسوقين (Freelance/Part-time) وحسم الميزانيات 45k/70k/25k', status: 'يحتاج تحققاً', contextNote: 'تضارب ميزانيات تاريخية يحتاج اعتماد CFO', verificationNote: '' },
+  { id: 'v-18', num: 18, category: 'قرار Static Public IP', title: 'تنفيذ شراء Static Public IP من مزود الخدمة وتفعيله على WAN1 في TP-Link ER8411', status: 'مؤكد', contextNote: 'القرار الأحدث يغني عن الاعتماد الأساسي على DDNS', verificationNote: '' },
+  { id: 'v-19', num: 19, category: 'WireGuard + Grandstream Wave', title: 'اختبار ربط 25–30 مستخدماً عن بُعد عبر WireGuard على ER8411 نحو Grandstream 604A فقط', status: 'قيد التنفيذ', contextNote: 'عزل VLAN 30 ومنع فتح SIP/RTP للإنترنت العام', verificationNote: '' },
+  { id: 'v-20', num: 20, category: 'جرد السيرفرات التاريخي Dell R730', title: 'التحقق من مصير ومكان Dell PowerEdge R730 + Windows Server + 20 CALs مقارنةً بـ R640', status: 'يحتاج تحققاً', contextNote: 'مرجع قديم بالملف لا يُفترض دمجه بالراك دون فحص ميداني', verificationNote: '' },
+  { id: 'v-21', num: 21, category: 'الشبكة والـ FortiGate و ISO 27001', title: 'حسم خطة FortiGate / Grade A وتوضيح عدم حصول الشركة على ISO 27001 حتى الآن', status: 'يحتاج تحققاً', contextNote: 'ISO 27001 هدف مستقبلي وليست شهادة قائمة', verificationNote: '' },
+  { id: 'v-22', num: 22, category: 'تجهيزات غرفة السيرفرات', title: 'إغلاق نواقص الغرفة: UPS 1500VA، تكييف 24/7، وطفاية الحريق الغازية', status: 'قيد التنفيذ', contextNote: 'مؤمن بالكابينة بانتظار التوريد النهائي للـ UPS', verificationNote: '' },
+  { id: 'v-23', num: 23, category: 'فواتير إذن المنشاوي والأصدقاء', title: 'تحويل إذن المنشاوي (8,510 ج.م) لفاتورة ضريبية ETA وحسم فرق كاميرات 2MP/5MP', status: 'يحتاج تحققاً', contextNote: 'متابعة المدير المالي أ/ هاني والمهندس عماد الشرقاوي', verificationNote: '' },
+  { id: 'v-24', num: 24, category: 'استعادة تحليل Daro من قيمة تك', title: 'متابعة استئناف مراجعة Daro Figma (المتوقف عند 44 دقيقة) بعد تجديد Quota في 30 نوفمبر', status: 'مؤجل', contextNote: 'مؤجل لما بعد تشغيل واستقرار 4B', verificationNote: '' },
+  { id: 'v-25', num: 25, category: 'عيوب Daro الثمانية والطيران الداخلي', title: 'تصحيح تناقض الأرقام الـ 8 في Figma وحصر تكامل Amadeus/EgyptAir على مصر داخلياً فقط', status: 'مؤجل', contextNote: 'يستهدف الزوار العرب والسياح بمصر فقط', verificationNote: '' },
+  { id: 'v-26', num: 26, category: 'نموذج عمولات WeKaLa', title: 'تحديد رسوم الإعلانات والمزادات والضمان والبيع والشراء في منصة وكالة Marketplace', status: 'مؤجل', contextNote: 'مؤجل لما بعد تشغيل 4B بدون تشغيل فريق مستقل الآن', verificationNote: '' },
+  { id: 'v-27', num: 27, category: 'متاجر التطبيقات ورقم DUNS', title: 'تأكيد إتمام رقم D-U-N-S وحالة حسابات Apple Developer و Google Play لشركة مشاوير', status: 'يحتاج تحققاً', contextNote: 'ذُكر قيد الاستخراج في أكتوبر ويحتاج توثيق الرقم', verificationNote: '' },
+  { id: 'v-28', num: 28, category: 'المقترحات التجارية غير المعتمدة', title: 'عرض 4B Exchange و Route Club و Guaranteed Ride و Neighborhood Logistics على المالك لاحقاً', status: 'مقترح', contextNote: 'لا تدخل في خطة الإطلاق الأولى الحالية', verificationNote: '' },
+  { id: 'v-29', num: 29, category: 'الكيانات المقترحة ومطعم العجوزة', title: 'تأكيد فصل حسابات مطعم العجوزة بالكامل وإبقاء المصرية الكويتية/الشركة التابعة كمقترح', status: 'مؤكد', contextNote: 'العجوزة بإدارة أ/ هاني CFO منفصل تماماً عن مشاوير', verificationNote: '' },
+  { id: 'v-30', num: 30, category: 'المسودات القانونية المؤقتة', title: 'تحويل كافة نماذج العقود المؤقتة وNDA لمراجعة الأستاذ محمد مصطفى للاعتماد النهائي', status: 'يحتاج تحققاً', contextNote: 'النماذج المؤقتة للتجهيز الداخلي وليست مستنداً نهائياً', verificationNote: '' },
+];
+
+export const FOURB_FEATURES_18: Array<{ id: number; name: string; scope: string; statusNote: string }> = [
+  { id: 1, name: 'الرحلات الفورية والجدولة المسبقة', scope: 'طلب فوري أو حجز مسبق', statusNote: 'قائمة متطلبات — ليست كلها مثبتة في الإنتاج' },
+  { id: 2, name: 'نظام المزايدة والتسعير الحر (Bid / Fixed Fare)', scope: 'تفاوض حي أو سعر مقترح', statusNote: 'يتطلب حسم احتساب السعر من السيرفر' },
+  { id: 3, name: 'تعدد محطات التوقف (Add Stop)', scope: 'تغطي التوصيل متعدد النقاط وتغني عن Shared Load', statusNote: 'ميزة قائمة تغطي التوقفات المتعددة' },
+  { id: 4, name: 'فئات المركبات الأربع', scope: 'ملاكي عادي/VIP · ميكروباص 7 راكب · دراجات · نصف نقل بضائع فقط', statusNote: 'Pickup للبضائع والطرود فقط' },
+  { id: 5, name: 'توصيل الطرود والبضائع (Parcel Delivery)', scope: 'عبر الدراجات والنصف نقل والـ 7 راكب', statusNote: 'مع تتبع مسار عبر Add Stop' },
+  { id: 6, name: 'تتبع GPS الحي ومشاركة الرحلة', scope: 'خرائط Google Maps وحفظ المسار', statusNote: 'يحتاج GPS Integrity Test 01 على هاتف حقيقي' },
+  { id: 7, name: 'باقات واشتراكات 4B الرسمية', scope: 'شرائح باقات ورحلات مخفضة', statusNote: 'واردة في المتطلبات بدون أسعار معتمدة نهائياً' },
+  { id: 8, name: 'حجز الرحلات للغير (Book for Someone Else)', scope: 'إدخال بيانات المستفيد ورقم هاتفه', statusNote: 'ميزة مطلوبة للتحقق في E2E' },
+  { id: 9, name: 'نقاط التوصيل المفضلة والمحفوظة', scope: 'المنزل والعمل والمحطات المتكررة', statusNote: 'متوفرة بواجهات Figma' },
+  { id: 10, name: 'المحادثة والاتصال الآمن (In-App Chat / Masked Call)', scope: 'تواصل كابتن وعميل دون كشف الأرقام', statusNote: 'قيد المراجعة الأمنية والاختبار' },
+  { id: 11, name: 'الدفع النقدي والإلكتروني والمحفظة', scope: 'نقدي · فوري · Paymob · Vodafone Cash · InstaPay', statusNote: 'لم يثبت تشغيل البوابات الإلكترونية حياً بعد' },
+  { id: 12, name: 'كوبونات الشركات (4B Prepaid Trips B2B)', scope: 'أكواد 10/20/50/100 وباقات شركات', statusNote: 'قيد التنفيذ والتدقيق المحاسبي السبعي' },
+  { id: 13, name: 'رمز تحقق الرحلة OTP / PIN للأمان', scope: 'تأكيد ركوب العميل الصحيح مع الكابتن', statusNote: 'مرتبط ببوابة OTP ومؤقت 60 ثانية' },
+  { id: 14, name: 'زر الطوارئ SOS ومشاركة الموقع للجهات', scope: 'أمان الراكب والكابتن أثناء الرحلة', statusNote: 'مطلوب ربطه بغرفة العمليات' },
+  { id: 15, name: 'نظام التقييمات والبلاغات والمفقودات', scope: 'تقييم متبادل وتذاكر دعم فوري', statusNote: 'ربط مع support@mashweer.com.eg و604A' },
+  { id: 16, name: 'برنامج الإحالة والنقاط والولاء', scope: 'دعوة أصدقاء ورصيد مكافآت', statusNote: 'يحتاج ضبط القواعد مع CFO' },
+  { id: 17, name: 'دعم العربية والإنجليزية وRTL الكامل', scope: 'واجهة ثنائية اللغة لعملاء مصر', statusNote: 'مراجعة اتساق الترجمة في الكود' },
+  { id: 18, name: 'إشعارات الدفع الفورية Android & iOS', scope: 'FCM V1 OAuth2 + Apple APNs .p8', statusNote: 'قيد التحقق على أجهزة حقيقية' },
+];
+
+export const CAPTAIN_APP_SPECS: Array<{ id: number; module: string; detail: string; governanceStatus: KnowledgeStatus }> = [
+  { id: 1, module: 'تطبيق مستقل عن 4B العملاء', detail: 'تطبيق «كابتن مشاوير» منفصل تماماً في الكود والحساب والـ Package ID ومتاجر النشر.', governanceStatus: 'مؤكد' },
+  { id: 2, module: 'التحقق من الوجه CompreFace + Liveness', detail: 'مطابقة حيوية لصورة الكابتن محلياً داخل مصر (WE/MIST + Isolated Docker VM) وفق قانون 151/2018 وبمدة احتفاظ 1–3 أسابيع قيد الاعتماد.', governanceStatus: 'قيد التنفيذ' },
+  { id: 3, module: 'فحص الوثائق وتنبيهات انتهاء الرخص', detail: 'رفع بطاقة الرقم القومي، رخصة القيادة، رخصة السيارة، والفيش عبر روابط Cloudinary مشفرة.', governanceStatus: 'قيد التنفيذ' },
+  { id: 4, module: 'فحص أمان GPS ومقاومة التزييف', detail: 'اختبار Mock Location OFF، دقة الموقع، Battery Saver OFF، ومنع Root (GPS Integrity Test 01 لم يُثبت بعد على هاتف حقيقي).', governanceStatus: 'يحتاج تحققاً' },
+  { id: 5, module: 'قبول الرحلات وتقديم العروض الحية', detail: 'استقبال الطلبات القريبة عبر Redis/PostGIS والرد بسعر أو قبول مباشر خلال مهلة 15 ثانية.', governanceStatus: 'قيد التنفيذ' },
+  { id: 6, module: 'الملاحة ومتابعة المحطات المتعددة Add Stop', detail: 'توجيه لمحطات التوقف والوجهة النهائية دون تداخل مع شاشات نقل البضائع.', governanceStatus: 'قيد التنفيذ' },
+  { id: 7, module: 'المحفظة المالية وسحب المستحقات', detail: 'عرض صافي العمولات وأجرة الكابتن منفصلة عن خصومات 4B والشركات، وسحب الرصيد.', governanceStatus: 'يحتاج تحققاً' },
+  { id: 8, module: 'الحوافز الأسبوعية ومستوى الالتزام', detail: 'أهداف عدد الرحلات وتقارير الأداء اليومي والأسبوعي.', governanceStatus: 'قيد التنفيذ' },
+  { id: 9, module: 'الالتزام بربط LTRA (قانون 87/2018)', detail: 'إرسال بيانات الرحلات والكباتن والمركبات لخوادم جهاز تنظيم النقل البري.', governanceStatus: 'قيد التنفيذ' },
+  { id: 10, module: 'الدعم الفني والطوارئ SOS و604A', detail: 'ربط مباشر مع خدمة العملاء والكول سنتر بمقر المعادي.', governanceStatus: 'مؤكد' },
+];
+
+export const WEKALA_SPECS: {
+  summary: string;
+  deferralRule: string;
+  commissionNote: string;
+  modules5: Array<{ id: number; name: string; description: string }>;
+} = {
+  summary: 'منصة Marketplace متكاملة (ليست نظام إدارة فروع نقل) — تشمل البيع المباشر والإعلانات المبوبة والمزادات والمقايضة وصفحات التجار الموثقين.',
+  deferralRule: 'مؤجل مؤقتاً حتى استلام وتشغيل 4B واستقرار المقر — يمتلك الكيان الهندسي حصرها دون فريق تشغيل مستقل الآن.',
+  commissionNote: 'نسب العمولات ورسوم الإعلانات وخدمات الضمان المالي (Escrow) غير معتمدة نهائياً وتحتاج تحققاً مالياً وقانونياً.',
+  modules5: [
+    { id: 1, name: '1. الإعلانات المبوبة (Classifieds)', description: 'عرض منتجات وخدمات مباشرة بين الأفراد والتجار بالبحث والتصنيفات.' },
+    { id: 2, name: '2. البيع المباشر (Buy Now)', description: 'شراء فوري بسعر ثابت مع سلة وتأكيد طلب.' },
+    { id: 3, name: '3. المزادات الحية والمحدودة (Auctions)', description: 'تقديم عروض أسعار تنافسية بفواصل زمنية محددة.' },
+    { id: 4, name: '4. المقايضة (Barter Exchange)', description: 'تبادل سلع بسلع أو سلع مع فرق نقدي بالتراضي.' },
+    { id: 5, name: '5. صفحات التجار الموثقين (Verified Merchant Pages)', description: 'متاجر فرعية للتجار المعتمدين بتقييمات ومخزون.' },
+  ],
+};
 
 export const UNIFIED_SUPABASE_SQL = `-- ==============================================================================
 -- NOUB CRM + MESHAWIR DIGITAL PLATFORMS — UNIFIED IDEMPOTENT SUPABASE SQL
--- 1) Opens direct access (no Supabase email login required) for existing 10 CRM tables
--- 2) Creates & Seeds all 22+ Meshawir Master Handoff tables (4B, Daro, WeKaLa,
---    TP-Link ER8411, Grandstream 604A, WE ADSL + Vodafone 5G, 48 Rack Ports, etc.)
+-- Includes: Direct Access (No Login Friction), 22+ Meshawir Tables + 30-Point Verification Matrix
 -- Run directly in Supabase > SQL Editor > Run
 -- ==============================================================================
 
@@ -1056,6 +1560,17 @@ CREATE TABLE IF NOT EXISTS public.meshawir_kaggle_research (
     submission_status TEXT DEFAULT 'جاري التنفيذ حتى 17 أكتوبر'
 );
 
+CREATE TABLE IF NOT EXISTS public.meshawir_verification_checks (
+    id TEXT PRIMARY KEY,
+    num INT NOT NULL,
+    category TEXT NOT NULL,
+    title TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'يحتاج تحققاً',
+    context_note TEXT,
+    verification_note TEXT DEFAULT '',
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Disable RLS across Meshawir tables for seamless direct connection
 DO $$ DECLARE t TEXT; BEGIN
   FOREACH t IN ARRAY ARRAY[
@@ -1064,7 +1579,7 @@ DO $$ DECLARE t TEXT; BEGIN
     'meshawir_rack_ports','meshawir_4b_leased_lines','meshawir_cctv_cameras','meshawir_voip_extensions',
     'mashweer_emails','meshawir_domains','project_tasks','meshawir_facility_zones',
     'hardware_inventory','meshawir_legal_dossiers','system_inquiries','meshawir_subsidiary_proposals',
-    'meshawir_general_ledger','meshawir_kaggle_research'
+    'meshawir_general_ledger','meshawir_kaggle_research','meshawir_verification_checks'
   ] LOOP
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name=t) THEN
       EXECUTE format('ALTER TABLE public.%I DISABLE ROW LEVEL SECURITY', t);

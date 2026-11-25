@@ -3,14 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   LayoutDashboard,
   Layers,
   LogOut,
   Menu,
   X,
-  FolderGit2,
   Phone,
   Globe,
   Bookmark,
@@ -26,18 +25,32 @@ import {
   Archive,
   Network,
   Database,
+  FileSpreadsheet,
+  PanelRightClose,
+  PanelRightOpen,
+  Palette,
+  Check,
 } from 'lucide-react';
 import { TABLES } from './data/tables';
 import {
   isPasscodeUnlocked,
   lockWorkspace,
 } from './lib/dataService';
+import {
+  THEME_OPTIONS,
+  applyTheme,
+  getSavedSidebarCollapsed,
+  getSavedTheme,
+  saveSidebarCollapsed,
+  saveTheme,
+  type ThemeId,
+} from './lib/theme';
 import type { TableId, ViewId } from './types/crm';
 import { LoginView } from './components/LoginView';
 import { ExecutiveDashboard } from './components/ExecutiveDashboard';
 import { AppWorkspaceView } from './components/AppWorkspaceView';
 import { DataGridView } from './components/DataGridView';
-import { GitHubExportModal } from './components/GitHubExportModal';
+import { DataExportModal } from './components/DataExportModal';
 import { JointTasksView } from './components/JointTasksView';
 import { HandoverView } from './components/HandoverView';
 import { MasterRegistryView } from './components/MasterRegistryView';
@@ -60,14 +73,14 @@ class AppErrorBoundary extends React.Component<
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-          <div className="max-w-md w-full bg-white border border-red-200 rounded-xl p-6 space-y-3 text-center">
-            <h2 className="text-base font-bold text-red-700">تعذر عرض الصفحة مؤقتاً</h2>
-            <p className="text-xs text-slate-600 font-mono">{this.state.message}</p>
+        <div className="min-h-screen bg-[var(--app-bg)] text-[var(--app-text)] flex items-center justify-center p-6">
+          <div className="max-w-md w-full bg-[var(--app-surface)] border border-red-500/40 rounded-xl p-6 space-y-3 text-center">
+            <h2 className="text-base font-bold text-red-600 dark:text-red-400">تعذر عرض الصفحة مؤقتاً</h2>
+            <p className="text-xs text-[var(--app-muted)] font-mono">{this.state.message}</p>
             <button
               type="button"
               onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-[#1E3A5F] text-white text-xs font-semibold rounded-lg cursor-pointer"
+              className="px-4 py-2 bg-[var(--app-sidebar)] text-white text-xs font-semibold rounded-lg cursor-pointer"
             >
               إعادة تحميل الصفحة
             </button>
@@ -98,6 +111,28 @@ function MainApp() {
   const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [theme, setTheme] = useState<ThemeId>(() => getSavedTheme());
+  const [themeMenuOpen, setThemeMenuOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => getSavedSidebarCollapsed());
+  const [refreshTick, setRefreshTick] = useState(0);
+
+  useEffect(() => {
+    applyTheme(theme);
+  }, [theme]);
+
+  const handleThemeChange = (nextTheme: ThemeId) => {
+    setTheme(nextTheme);
+    saveTheme(nextTheme);
+    setThemeMenuOpen(false);
+  };
+
+  const toggleSidebarCollapse = () => {
+    setSidebarCollapsed((prev) => {
+      const next = !prev;
+      saveSidebarCollapsed(next);
+      return next;
+    });
+  };
 
   const handleUnlockSuccess = () => {
     setUnlocked(true);
@@ -117,19 +152,19 @@ function MainApp() {
     if (activeView === 'dash') {
       return {
         title: 'ملخص المتابعة والرسوم البيانية',
-        subtitle: 'ربط مباشر بـ Supabase لمتابعة الاستحقاقات المالية وجاهزية تطبيقات مشاوير (4B · Daro · WeKaLa)',
+        subtitle: 'ربط مباشر بـ Supabase لمتابعة الاستحقاقات وجاهزية 4B وكابتن مشاوير (بينما Daro وWeKaLa مؤجلان لما بعد 4B)',
       };
     }
     if (activeView === 'rack') {
       return {
         title: 'الراك التفاعلي وغرفة سيرفرات المعادي (Perla 27U)',
-        subtitle: 'سيسكو 3850 (48 بورت)، راوتر/فايروول TP-Link ER8411، وسنترال Grandstream 604A — بقيادة م/ عماد الشرقاوي وم/ سامح يس',
+        subtitle: 'سيسكو 3850 (48 بورت)، ER8411 (Static Public IP + دراسة WireGuard لـ Wave)، وسنترال 604A — بقيادة م/ عماد الشرقاوي وم/ سامح يس',
       };
     }
     if (activeView === 'ecosystem') {
       return {
-        title: 'منظومة مشاوير الشاملة (8 مشاريع + 22 جدولاً)',
-        subtitle: 'تطبيقات 4B ودارو ووكالة، الهيكل البشري (13)، المقر (10 مناطق)، 16 كاميرا، فواتير ETA، الملفات القانونية، وكاجل',
+        title: 'منظومة مشاوير الشاملة (9 مشاريع + 24 جدولاً + مصفوفة التحقق الـ 30)',
+        subtitle: '4B وكابتن مشاوير، 4B Prepaid Trips B2B، حوكمة الأدوار، فحص GPS/Firebase/WireGuard، Daro وWeKaLa المؤجلان، ومصفوفة التحقق الـ 30',
       };
     }
     if (activeView === 'app-workspace') {
@@ -177,11 +212,14 @@ function MainApp() {
       <>
         <LoginView
           onSuccess={handleUnlockSuccess}
-          onOpenGitHubExport={() => setExportModalOpen(true)}
+          onOpenDataExport={() => setExportModalOpen(true)}
+          theme={theme}
+          onChangeTheme={handleThemeChange}
         />
-        <GitHubExportModal
+        <DataExportModal
           open={exportModalOpen}
           onClose={() => setExportModalOpen(false)}
+          onCacheSynced={() => setRefreshTick((n) => n + 1)}
         />
       </>
     );
@@ -193,172 +231,187 @@ function MainApp() {
     { id: 'finance', label: 'المالية' },
   ];
 
-  const renderNavContent = () => (
+  const activeThemeOption = THEME_OPTIONS.find((t) => t.id === theme) || THEME_OPTIONS[0];
+
+  const renderNavItem = (
+    id: ViewId,
+    label: string,
+    icon: React.ReactNode,
+    collapsed: boolean
+  ) => {
+    const isActive = activeView === id;
+    return (
+      <button
+        key={id}
+        type="button"
+        onClick={() => navigate(id)}
+        title={collapsed ? label : undefined}
+        aria-label={label}
+        className={`w-full flex items-center ${
+          collapsed ? 'justify-center px-2 py-2.5' : 'gap-2.5 px-3 py-2'
+        } text-sm rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
+          isActive
+            ? 'bg-[var(--app-sidebar-active)] text-white font-semibold'
+            : 'text-slate-200 hover:bg-white/10'
+        }`}
+      >
+        {icon}
+        {!collapsed && <span className="truncate">{label}</span>}
+      </button>
+    );
+  };
+
+  const renderNavContent = (collapsed: boolean) => (
     <div className="flex flex-col h-full">
-      <div className="px-3 pb-4 mb-3 border-b border-white/15">
-        <h2 className="text-lg font-bold text-white tracking-tight">NOUB CRM</h2>
-        <p className="text-[11px] text-emerald-300 mt-1 flex items-center gap-1.5">
-          <Database className="w-3 h-3 shrink-0" />
-          <span>ربط مباشر مع Supabase</span>
-        </p>
+      <div
+        className={`pb-4 mb-3 border-b border-white/15 flex items-center ${
+          collapsed ? 'flex-col gap-2 px-1' : 'justify-between gap-2 px-2'
+        }`}
+      >
+        {collapsed ? (
+          <div
+            className="w-9 h-9 rounded-lg bg-white/12 flex items-center justify-center font-bold text-sm text-white"
+            title="NOUB CRM — مشاوير"
+          >
+            N
+          </div>
+        ) : (
+          <div className="min-w-0">
+            <h2 className="text-lg font-bold text-white tracking-tight truncate">NOUB CRM</h2>
+            <p className="text-[11px] text-emerald-300 mt-0.5 flex items-center gap-1.5">
+              <Database className="w-3 h-3 shrink-0" />
+              <span className="truncate">ربط مباشر مع Supabase</span>
+            </p>
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={toggleSidebarCollapse}
+          title={collapsed ? 'توسيع القائمة الجانبية' : 'طي القائمة الجانبية'}
+          aria-label={collapsed ? 'توسيع القائمة الجانبية' : 'طي القائمة الجانبية'}
+          className="hidden lg:inline-flex p-1.5 rounded-lg text-slate-200 hover:text-white hover:bg-white/12 transition-colors cursor-pointer shrink-0"
+        >
+          {collapsed ? <PanelRightOpen className="w-4 h-4" /> : <PanelRightClose className="w-4 h-4" />}
+        </button>
       </div>
 
-      <nav className="flex-1 space-y-1 overflow-y-auto px-1">
-        <button
-          type="button"
-          onClick={() => navigate('dash')}
-          className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
-            activeView === 'dash'
-              ? 'bg-blue-600 text-white font-semibold'
-              : 'text-slate-200 hover:bg-white/10'
-          }`}
-        >
-          <LayoutDashboard className="w-4 h-4 shrink-0" />
-          <span>الملخص والرسوم</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => navigate('rack')}
-          className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
-            activeView === 'rack'
-              ? 'bg-blue-600 text-white font-semibold'
-              : 'text-slate-200 hover:bg-white/10'
-          }`}
-        >
-          <Server className="w-4 h-4 shrink-0" />
-          <span>الراك التفاعلي 27U</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => navigate('ecosystem')}
-          className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
-            activeView === 'ecosystem'
-              ? 'bg-blue-600 text-white font-semibold'
-              : 'text-slate-200 hover:bg-white/10'
-          }`}
-        >
-          <Network className="w-4 h-4 shrink-0" />
-          <span>منظومة مشاوير الشاملة</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => navigate('app-workspace')}
-          className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
-            activeView === 'app-workspace'
-              ? 'bg-blue-600 text-white font-semibold'
-              : 'text-slate-200 hover:bg-white/10'
-          }`}
-        >
-          <Layers className="w-4 h-4 shrink-0" />
-          <span>التطبيقات والهيكل</span>
-        </button>
+      <nav className="flex-1 space-y-1 overflow-y-auto sidebar-scroll px-1">
+        {renderNavItem('dash', 'الملخص والرسوم', <LayoutDashboard className="w-4 h-4 shrink-0" />, collapsed)}
+        {renderNavItem('rack', 'الراك التفاعلي 27U', <Server className="w-4 h-4 shrink-0" />, collapsed)}
+        {renderNavItem('ecosystem', 'منظومة مشاوير الشاملة', <Network className="w-4 h-4 shrink-0" />, collapsed)}
+        {renderNavItem('app-workspace', 'التطبيقات والهيكل', <Layers className="w-4 h-4 shrink-0" />, collapsed)}
 
         <div className="pt-3">
-          <p className="px-3 pb-1 text-[11px] font-semibold text-slate-400">
-            إدارة مقر المعادي والتسليم
-          </p>
+          {collapsed ? (
+            <div className="my-2 border-t border-white/10" />
+          ) : (
+            <p className="px-3 pb-1 text-[11px] font-semibold text-slate-400">
+              إدارة مقر المعادي والتسليم
+            </p>
+          )}
           <div className="space-y-0.5">
-            <button
-              type="button"
-              onClick={() => navigate('joint-tasks')}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
-                activeView === 'joint-tasks'
-                  ? 'bg-blue-600 text-white font-semibold'
-                  : 'text-slate-200 hover:bg-white/10'
-              }`}
-            >
-              <ClipboardCheck className="w-4 h-4 shrink-0" />
-              <span>المهام المشتركة (105)</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate('handover')}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
-                activeView === 'handover'
-                  ? 'bg-blue-600 text-white font-semibold'
-                  : 'text-slate-200 hover:bg-white/10'
-              }`}
-            >
-              <ShieldCheck className="w-4 h-4 shrink-0" />
-              <span>تسليم م/ عماد (المقر)</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate('master-registry')}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
-                activeView === 'master-registry'
-                  ? 'bg-blue-600 text-white font-semibold'
-                  : 'text-slate-200 hover:bg-white/10'
-              }`}
-            >
-              <Archive className="w-4 h-4 shrink-0" />
-              <span>السجل الشامل (450)</span>
-            </button>
+            {renderNavItem('joint-tasks', 'المهام المشتركة (105)', <ClipboardCheck className="w-4 h-4 shrink-0" />, collapsed)}
+            {renderNavItem('handover', 'تسليم م/ عماد (المقر)', <ShieldCheck className="w-4 h-4 shrink-0" />, collapsed)}
+            {renderNavItem('master-registry', 'السجل الشامل (450)', <Archive className="w-4 h-4 shrink-0" />, collapsed)}
           </div>
         </div>
 
         {navGroups.map((group) => (
           <div key={group.id} className="pt-3">
-            <p className="px-3 pb-1 text-[11px] font-semibold text-slate-400">
-              {group.label}
-            </p>
+            {collapsed ? (
+              <div className="my-2 border-t border-white/10" />
+            ) : (
+              <p className="px-3 pb-1 text-[11px] font-semibold text-slate-400">
+                {group.label}
+              </p>
+            )}
             <div className="space-y-0.5">
-              {TABLES.filter((t) => t.group === group.id).map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => navigate(t.id)}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
-                    activeView === t.id
-                      ? 'bg-blue-600 text-white font-semibold'
-                      : 'text-slate-200 hover:bg-white/10'
-                  }`}
-                >
-                  {TABLE_ICONS[t.id]}
-                  <span>{t.name}</span>
-                </button>
-              ))}
+              {TABLES.filter((t) => t.group === group.id).map((t) =>
+                renderNavItem(t.id, t.name, TABLE_ICONS[t.id], collapsed)
+              )}
             </div>
           </div>
         ))}
       </nav>
 
       <div className="pt-3 mt-3 border-t border-white/15 space-y-2 px-1">
+        {/* Compact theme swatch bar in sidebar */}
+        {!collapsed && (
+          <div className="flex items-center justify-between gap-1 px-2 py-1.5 rounded-lg bg-white/8">
+            <span className="text-[11px] text-slate-200 font-medium">المظهر</span>
+            <div className="flex items-center gap-1.5">
+              {THEME_OPTIONS.map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  title={opt.label}
+                  aria-label={opt.label}
+                  onClick={() => handleThemeChange(opt.id)}
+                  className={`w-4 h-4 rounded-full border transition-transform cursor-pointer ${
+                    theme === opt.id
+                      ? 'border-white scale-115 ring-2 ring-white/50'
+                      : 'border-white/40 opacity-80 hover:opacity-100'
+                  }`}
+                  style={{ background: `linear-gradient(135deg, ${opt.swatchBg} 50%, ${opt.swatchAccent} 50%)` }}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
         <button
           type="button"
           onClick={() => setExportModalOpen(true)}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors whitespace-nowrap cursor-pointer"
+          title={collapsed ? 'تصدير SQL و Excel المحدث' : undefined}
+          className={`w-full flex items-center justify-center gap-2 ${
+            collapsed ? 'px-2 py-2.5' : 'px-3 py-2'
+          } text-xs font-semibold bg-white/12 hover:bg-white/20 text-white rounded-lg transition-colors whitespace-nowrap cursor-pointer`}
         >
-          <FolderGit2 className="w-4 h-4 shrink-0" />
-          <span>ملفات GitHub و SQL</span>
+          <FileSpreadsheet className="w-4 h-4 shrink-0" />
+          {!collapsed && <span>تصدير SQL و Excel</span>}
         </button>
+
         <button
           type="button"
           onClick={handleLockOut}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-slate-200 hover:bg-white/10 rounded-lg transition-colors whitespace-nowrap cursor-pointer"
+          title={collapsed ? 'قفل الجلسة' : undefined}
+          className={`w-full flex items-center justify-center gap-2 ${
+            collapsed ? 'px-2 py-2.5' : 'px-3 py-2'
+          } text-xs font-medium text-slate-200 hover:bg-white/10 rounded-lg transition-colors whitespace-nowrap cursor-pointer`}
         >
           <LogOut className="w-4 h-4 shrink-0" />
-          <span>قفل الجلسة</span>
+          {!collapsed && <span>قفل الجلسة</span>}
         </button>
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row">
+    <div className="min-h-screen bg-[var(--app-bg)] text-[var(--app-text)] flex flex-col lg:flex-row">
       {/* Mobile Header */}
-      <div className="lg:hidden bg-[#1E3A5F] text-white px-4 py-3 flex items-center justify-between sticky top-0 z-30">
+      <div className="lg:hidden bg-[var(--app-sidebar)] text-white px-4 py-3 flex items-center justify-between sticky top-0 z-30">
         <span className="font-bold text-base">NOUB CRM</span>
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              const idx = THEME_OPTIONS.findIndex((t) => t.id === theme);
+              const next = THEME_OPTIONS[(idx + 1) % THEME_OPTIONS.length];
+              handleThemeChange(next.id);
+            }}
+            aria-label="تبديل المظهر"
+            className="px-2 py-1.5 text-xs font-medium bg-white/12 rounded-md cursor-pointer inline-flex items-center gap-1"
+          >
+            <Palette className="w-3.5 h-3.5" />
+            <span>{activeThemeOption.shortLabel}</span>
+          </button>
           <button
             type="button"
             onClick={() => setExportModalOpen(true)}
             className="px-2.5 py-1.5 text-xs font-semibold bg-white/15 rounded-md whitespace-nowrap cursor-pointer"
           >
-            GitHub + SQL
+            SQL + Excel
           </button>
           <button
             type="button"
@@ -374,62 +427,133 @@ function MainApp() {
       {/* Mobile Drawer */}
       {mobileNavOpen && (
         <div className="lg:hidden fixed inset-0 z-40 flex">
-          <div className="w-64 bg-[#1E3A5F] text-white p-4 h-full overflow-y-auto">
-            {renderNavContent()}
+          <div className="w-64 bg-[var(--app-sidebar)] text-white p-4 h-full overflow-y-auto sidebar-scroll">
+            {renderNavContent(false)}
           </div>
           <div
-            className="flex-1 bg-slate-900/40"
+            className="flex-1 bg-slate-950/45"
             onClick={() => setMobileNavOpen(false)}
           />
         </div>
       )}
 
-      {/* Desktop Sidebar */}
-      <aside className="hidden lg:block w-64 bg-[#1E3A5F] text-white p-4 sticky top-0 h-screen shrink-0">
-        {renderNavContent()}
+      {/* Desktop Collapsible Sidebar */}
+      <aside
+        className={`hidden lg:block bg-[var(--app-sidebar)] text-white sticky top-0 h-screen shrink-0 transition-[width] duration-200 ease-out ${
+          sidebarCollapsed ? 'w-[74px] p-2.5' : 'w-64 p-4'
+        }`}
+      >
+        {renderNavContent(sidebarCollapsed)}
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 max-w-[1480px]">
-        <header className="pb-5 mb-6 border-b border-slate-200 flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">{headerInfo.title}</h1>
-            <p className="text-xs sm:text-sm text-slate-500 mt-1">{headerInfo.subtitle}</p>
+      <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 max-w-[1520px]">
+        <header className="pb-5 mb-6 border-b border-[var(--app-border)] flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-start gap-3 min-w-0">
+            <button
+              type="button"
+              onClick={toggleSidebarCollapse}
+              title={sidebarCollapsed ? 'توسيع القائمة الجانبية' : 'طي القائمة الجانبية'}
+              aria-label={sidebarCollapsed ? 'توسيع القائمة الجانبية' : 'طي القائمة الجانبية'}
+              className="hidden lg:inline-flex mt-1 p-2 rounded-lg bg-[var(--app-surface)] border border-[var(--app-border)] text-[var(--app-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-2)] transition-colors cursor-pointer shrink-0"
+            >
+              {sidebarCollapsed ? (
+                <PanelRightOpen className="w-4 h-4" />
+              ) : (
+                <PanelRightClose className="w-4 h-4" />
+              )}
+            </button>
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl font-bold text-[var(--app-text)]">{headerInfo.title}</h1>
+              <p className="text-xs sm:text-sm text-[var(--app-muted)] mt-1">{headerInfo.subtitle}</p>
+            </div>
           </div>
-          <button
-            type="button"
-            onClick={() => setExportModalOpen(true)}
-            className="hidden sm:inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 rounded-lg whitespace-nowrap shrink-0 cursor-pointer"
-          >
-            <FolderGit2 className="w-4 h-4 text-[#1E3A5F]" />
-            <span>تحميل index.html الواحد + SQL</span>
-          </button>
+
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Theme Switcher Menu */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setThemeMenuOpen((v) => !v)}
+                className="inline-flex items-center gap-2 px-3 py-2 text-xs font-semibold bg-[var(--app-surface)] border border-[var(--app-border-strong)] hover:bg-[var(--app-surface-2)] text-[var(--app-text)] rounded-lg whitespace-nowrap shrink-0 cursor-pointer"
+              >
+                <Palette className="w-4 h-4 text-[var(--app-accent)]" />
+                <span>المظهر: {activeThemeOption.label}</span>
+              </button>
+
+              {themeMenuOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-30"
+                    onClick={() => setThemeMenuOpen(false)}
+                  />
+                  <div className="absolute left-0 mt-2 w-52 bg-[var(--app-surface)] border border-[var(--app-border-strong)] rounded-xl p-1.5 shadow-lg z-40">
+                    {THEME_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => handleThemeChange(opt.id)}
+                        className={`w-full flex items-center justify-between gap-2 px-3 py-2 text-xs font-medium rounded-lg transition-colors cursor-pointer ${
+                          theme === opt.id
+                            ? 'bg-[var(--app-surface-2)] text-[var(--app-accent)] font-semibold'
+                            : 'text-[var(--app-text)] hover:bg-[var(--app-surface-2)]'
+                        }`}
+                      >
+                        <span className="flex items-center gap-2">
+                          <span
+                            className="w-4 h-4 rounded-full border border-slate-400/50 shrink-0"
+                            style={{
+                              background: `linear-gradient(135deg, ${opt.swatchSidebar} 50%, ${opt.swatchBg} 50%)`,
+                            }}
+                          />
+                          <span>{opt.label}</span>
+                        </span>
+                        {theme === opt.id && <Check className="w-3.5 h-3.5 shrink-0" />}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setExportModalOpen(true)}
+              className="hidden sm:inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold bg-[var(--app-surface)] border border-[var(--app-border-strong)] hover:bg-[var(--app-surface-2)] text-[var(--app-text)] rounded-lg whitespace-nowrap shrink-0 cursor-pointer"
+            >
+              <FileSpreadsheet className="w-4 h-4 text-[var(--app-accent)]" />
+              <span>تصدير SQL و Excel المحدث</span>
+            </button>
+          </div>
         </header>
 
-        {activeView === 'dash' && (
-          <ExecutiveDashboard onSelectApp={handleSelectAppFromDashboard} />
-        )}
+        <div key={refreshTick}>
+          {activeView === 'dash' && (
+            <ExecutiveDashboard onSelectApp={handleSelectAppFromDashboard} />
+          )}
 
-        {activeView === 'rack' && <InteractiveRackView />}
+          {activeView === 'rack' && <InteractiveRackView />}
 
-        {activeView === 'ecosystem' && <MeshawirEcosystemView />}
+          {activeView === 'ecosystem' && <MeshawirEcosystemView />}
 
-        {activeView === 'app-workspace' && (
-          <AppWorkspaceView initialAppId={selectedAppId} />
-        )}
+          {activeView === 'app-workspace' && (
+            <AppWorkspaceView initialAppId={selectedAppId} />
+          )}
 
-        {activeView === 'joint-tasks' && <JointTasksView />}
+          {activeView === 'joint-tasks' && <JointTasksView />}
 
-        {activeView === 'handover' && <HandoverView />}
+          {activeView === 'handover' && <HandoverView />}
 
-        {activeView === 'master-registry' && <MasterRegistryView />}
+          {activeView === 'master-registry' && <MasterRegistryView />}
 
-        {activeTable && <DataGridView table={activeTable} />}
+          {activeTable && <DataGridView table={activeTable} />}
+        </div>
       </main>
 
-      <GitHubExportModal
+      <DataExportModal
         open={exportModalOpen}
         onClose={() => setExportModalOpen(false)}
+        onCacheSynced={() => setRefreshTick((n) => n + 1)}
       />
     </div>
   );

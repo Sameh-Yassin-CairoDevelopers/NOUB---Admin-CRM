@@ -4,16 +4,21 @@ import {
   MESHAWIR_RACK_PORTS,
   MESHAWIR_TASKS,
   MESHAWIR_INQUIRIES,
+  VERIFICATION_MATRIX_30,
+  type KnowledgeStatus,
   type RackDevice,
   type RackPort,
   type ProjectTaskItem,
   type SystemInquiryItem,
+  type VerificationMatrixItem,
 } from '../data/meshawirMasterData';
 import type { AnyRecord, AppRecord, DeliverableRecord, DueRow, TableId } from '../types/crm';
 
 export const APP_PASSCODE = '12345678';
+export const SEED_SYNC_VERSION = '2026-11-25-v2';
 const PASSCODE_UNLOCK_KEY = 'noub_crm_passcode_unlocked_v1';
 const LOCAL_DB_KEY = 'noub_crm_local_db_v3';
+const SEED_VERSION_KEY = 'noub_crm_seed_sync_version_v1';
 const MESHAWIR_CACHE_PREFIX = 'noub_meshawir_cache_v1_';
 
 export type ConnectionStatus = 'supabase-live' | 'hybrid-fallback';
@@ -21,30 +26,39 @@ export type ConnectionStatus = 'supabase-live' | 'hybrid-fallback';
 const INITIAL_APPS: AppRecord[] = [
   {
     id: 'app-4b',
-    name: '4B (فوربي / GoRide)',
-    description: 'منصة وتطبيق النقل الذكي للركاب والكباتن بنظام المزايدة الحية والخرائط الجغرافية',
+    name: '4B — تطبيق العملاء (النقل الذكي)',
+    description: 'تطبيق الركاب والأولوية القصوى للإطلاق: فوري ومجدول، مزايدة حية، Add Stop متعدد المحطات، 4 فئات مركبات (النصف نقل للبضائع فقط)، و4B Prepaid Trips B2B',
     platforms: 'أندرويد · iOS · لوحة إدارة',
     start_date: '2026-06-01',
     launch_date: '2026-11-30',
     status: 'في الفترة التجريبية',
   },
   {
-    id: 'app-daro',
-    name: 'DARO (دارو سوبر آب)',
-    description: 'تطبيق الشحن اللوجستي والطرود السريعة بنفس اليوم وتتبع البوالص والباركود',
-    platforms: 'أندرويد · iOS · لوحة متاجر',
-    start_date: '2026-07-01',
-    launch_date: '2026-12-30',
+    id: 'app-captain',
+    name: 'كابتن مشاوير (تطبيق السائقين المستقل)',
+    description: 'تطبيق الكابتن المستقل عن تطبيق العملاء: استقبال الطلبات والمزايدة، التحقق الحيوي CompreFace داخل مصر، فحص GPS Integrity، والمحفظة المالية وربط LTRA',
+    platforms: 'أندرويد · iOS · بوابة LTRA',
+    start_date: '2026-06-01',
+    launch_date: '2026-11-30',
     status: 'قيد التنفيذ',
   },
   {
+    id: 'app-daro',
+    name: 'DARO (دارو سوبر آب للزوار والسياح — مؤجل)',
+    description: 'تطبيق شامل للزوار العرب والسياح بمصر (إقامة، سيارات، طيران داخلي بمصر فقط عبر Amadeus/EgyptAir، مطاعم، طب) — مؤجل لحين تشغيل 4B وحل عيوب Figma الـ 8',
+    platforms: 'أندرويد · iOS · 6 قطاعات و5 أدوار',
+    start_date: '2026-07-01',
+    launch_date: '2027-02-01',
+    status: 'متوقف',
+  },
+  {
     id: 'app-wikala',
-    name: 'WeKaLa (وكالة)',
-    description: 'منصة إدارة المكاتب الفرعية والوكلاء المحليين بالمحافظات والأسطول الإقليمي',
-    platforms: 'أندرويد · iOS · لوحة وكلاء',
+    name: 'WeKaLa (سوق وكالة Marketplace — مؤجل)',
+    description: 'سوق إلكتروني شامل (إعلانات مبوبة، بيع مباشر، مزادات، مقايضة، صفحات تجار موثقين) — مؤجل لحين تشغيل 4B وتحديد العمولات والضمان',
+    platforms: 'أندرويد · iOS · صفحات تجار',
     start_date: '2026-06-15',
-    launch_date: '2026-12-15',
-    status: 'قيد التنفيذ',
+    launch_date: '2027-01-15',
+    status: 'متوقف',
   },
 ];
 
@@ -78,8 +92,8 @@ function buildInitialLocalDb(): Record<TableId, AnyRecord[]> {
   const deliverables: DeliverableRecord[] = [];
   INITIAL_APPS.forEach((app) => {
     DELIVERABLE_TEMPLATE.forEach(([stage, item], idx) => {
-      const done4B = app.id === 'app-4b' && idx < 8;
-      const inProg4B = app.id === 'app-4b' && idx >= 8 && idx < 15;
+      const done4B = (app.id === 'app-4b' || app.id === 'app-captain') && idx < 8;
+      const inProg4B = (app.id === 'app-4b' || app.id === 'app-captain') && idx >= 8 && idx < 15;
       deliverables.push({
         id: `dl-${app.id}-${idx + 1}`,
         created_at: now,
@@ -99,7 +113,7 @@ function buildInitialLocalDb(): Record<TableId, AnyRecord[]> {
 
   return {
     telecom_lines: [
-      { id: 'tel-1', created_at: now, name: 'خط أرضي 1 (إنترنت WE ADSL على TP-Link ER8411 WAN1)', kind: 'أرضي', number: 'خط أرضي 1 — المعادي', service: 'مربوط فعلياً بـ TP-Link ER8411 WAN1', provider: 'المصرية للاتصالات WE', cycle: 'شهري', amount: 500 },
+      { id: 'tel-1', created_at: now, name: 'خط أرضي 1 (إنترنت WE ADSL على TP-Link ER8411 WAN1)', kind: 'أرضي', number: 'خط أرضي 1 — المعادي', service: 'مربوط فعلياً بـ TP-Link ER8411 WAN1 + Static Public IP معتمد', provider: 'المصرية للاتصالات WE', cycle: 'شهري', amount: 500 },
       { id: 'tel-2', created_at: now, name: 'خط أرضي 2 (راكب على سنترال Grandstream 604A FXO-1)', kind: 'أرضي', number: 'خط أرضي 2 — المعادي', service: 'مربوط فعلياً بـ Grandstream 604A للعملاء والكباتن', provider: 'المصرية للاتصالات WE', cycle: 'شهري', amount: 250 },
       { id: 'tel-3', created_at: now, name: 'راوتر Vodafone 5G + H153-381 (WAN2 على TP-Link ER8411)', kind: 'محمول', number: 'فاتورة 748994 + باقة 5G', service: 'إنترنت عالي السرعة مدمج مع ER8411 فعلياً', provider: 'فودافون مصر', plan: 'Vodafone 5G + باقة 520', cycle: 'شهري', amount: 750 },
       { id: 'tel-4', created_at: now, name: 'خط تجميع فايبر WE L3VPN (24Mbps + 6 فروع 4Mbps)', kind: 'أرضي', number: 'TE-CAI-4B-PRI-4821', service: 'ربط مباشر مع القرية الذكية < 5ms (PO #6078927)', provider: 'المصرية للاتصالات WE', cycle: 'ربع سنوي', amount: 90000 },
@@ -111,8 +125,8 @@ function buildInitialLocalDb(): Record<TableId, AnyRecord[]> {
     ],
     wanted_domains: [
       { id: 'wd-1', created_at: now, name: 'mashweer.net', ext: '.net', provider: 'EC / مسجل خارجي', priority: 'عالية', status: 'محجوز', project: 'عدة تطبيقات', notes: 'مقترح تجديده مع mashawer.com.eg' },
-      { id: 'wd-2', created_at: now, name: 'wikala.com.eg', ext: '.com.eg', provider: 'المصرية EC', priority: 'عالية', status: 'متاح', project: 'WIKALA', notes: 'بانتظار السجل التجاري وشهادة المنشأ' },
-      { id: 'wd-3', created_at: now, name: 'daro.eg', ext: '.eg', provider: 'المصرية EC', priority: 'عالية', status: 'متاح', project: 'DARO', notes: 'النطاق الرسمي لتطبيق دارو للشحن' },
+      { id: 'wd-2', created_at: now, name: 'wikala.com.eg', ext: '.com.eg', provider: 'المصرية EC', priority: 'عالية', status: 'متاح', project: 'WIKALA', notes: 'بانتظار السجل التجاري وشهادة المنشأ (مؤجل)' },
+      { id: 'wd-3', created_at: now, name: 'daro.eg', ext: '.eg', provider: 'المصرية EC', priority: 'عالية', status: 'متاح', project: 'DARO', notes: 'النطاق الرسمي لسوبر آب الزوار العرب والسياح (مؤجل)' },
     ],
     providers: [
       { id: 'prv-1', created_at: now, name: 'المصرية للاتصالات (WE Cloud & WAF)', category: 'سحابة / متاجر', site: '4B', login_url: 'https://cloud.te.eg/portal', username: 'mashweer_telecom_admin', pwd_type: 'برايفت (الماستر)', funding: 'اشتراك ثابت', amount: 201874, cycle: 'ربع سنوي', owner: 'المهندس عماد الشرقاوي + المهندس سامح يس', notes: 'PO #6078933 بإجمالي 807,496 ج.م/سنة' },
@@ -132,8 +146,8 @@ function buildInitialLocalDb(): Record<TableId, AnyRecord[]> {
       { id: 'api-4', created_at: now, provider: 'Fawry', service: 'Payment & Wallet Webhook', site: '4B', env: 'Test', key_label: 'FAWRY_MERCHANT_CODE_MASHWEER', secret_location: 'خزنة الإدارة المالية', billing: 'حسب الاستخدام' },
     ],
     sites: [
-      { id: 'site-1', created_at: now, name: 'راوتر وفايروول TP-Link ER8411 (رئيسي)', url: 'https://192.168.10.1', purpose: 'إدارة خط WE ADSL (WAN1) + Vodafone 5G (WAN2) وVLANs', providers: 'مقر المعادي', pwd_type: 'برايفت (الماستر)', it_owner: 'المهندس عماد الشرقاوي' },
-      { id: 'site-2', created_at: now, name: 'سنترال Grandstream UCM6304A (604A)', url: 'https://192.168.30.1:8089', purpose: 'إدارة التحويلات 100-116 والخط الأرضي الثاني وتسجيل المكالمات', providers: 'مقر المعادي', pwd_type: 'برايفت (الماستر)', it_owner: 'المهندس عماد الشرقاوي' },
+      { id: 'site-1', created_at: now, name: 'راوتر وفايروول TP-Link ER8411 (رئيسي)', url: 'https://192.168.10.1', purpose: 'إدارة خط WE ADSL + Static Public IP + Vodafone 5G + WireGuard VPN', providers: 'مقر المعادي', pwd_type: 'برايفت (الماستر)', it_owner: 'المهندس عماد الشرقاوي' },
+      { id: 'site-2', created_at: now, name: 'سنترال Grandstream UCM6304A (604A)', url: 'https://192.168.30.1:8089', purpose: 'التحويلات 100-116 وWave عن بُعد (25–30 مستخدماً عبر WireGuard VLAN 30)', providers: 'مقر المعادي', pwd_type: 'برايفت (الماستر)', it_owner: 'المهندس عماد الشرقاوي' },
       { id: 'site-3', created_at: now, name: 'بوابة WE Cloud & F5 WAF', url: 'https://cloud.te.eg/portal', purpose: 'إدارة خوادم 4B السحابية وجدار F5 WAF', providers: 'المصرية للاتصالات WE', pwd_type: 'برايفت (الماستر)', it_owner: 'المهندس عماد الشرقاوي' },
       { id: 'site-4', created_at: now, name: 'لوحة EC للنطاقات والاستضافة', url: 'https://clients.ec.com.eg/clientarea.php', purpose: 'إدارة DNS وتجديد mashawer.com.eg', providers: 'EC Egypt', pwd_type: 'برايفت (الماستر)', it_owner: 'المهندس عماد الشرقاوي' },
       { id: 'site-5', created_at: now, name: 'لوحة Proxmox VE 8.x (Z440 #1)', url: 'https://192.168.10.20:8006', purpose: 'إدارة الأجهزة الافتراضية وOPNsense المساند وخزنة الباك أب', providers: 'مقر المعادي', pwd_type: 'برايفت (الماستر)', it_owner: 'المهندس عماد الشرقاوي' },
@@ -153,23 +167,131 @@ function buildInitialLocalDb(): Record<TableId, AnyRecord[]> {
     deliverables,
     team: [
       { id: 'tm-1', created_at: now, app_id: 'app-4b', level: 'الإدارة العليا', title: 'المستشار التقني الأول ومدير فرع المعادي', person: 'المهندس عماد الشرقاوي', party: 'استشاري', job_status: 'معيّن', reports_to: 'أ/ أبو خالد', duties: 'إدارة مقر المعادي، TP-Link ER8411، السنترال 604A، WE، والربط الحكومي' },
-      { id: 'tm-2', created_at: now, app_id: 'app-4b', level: 'الإدارة العليا', title: 'رئيس قطاع التكنولوجيا (CTO)', person: 'المهندس سامح يس', party: 'شركتنا', job_status: 'معيّن', reports_to: 'أ/ أبو خالد', duties: 'القيادة الهندسية للتطبيقات والمواصفات وخطة قيمة تك وبحث كاجل' },
-      { id: 'tm-3', created_at: now, app_id: 'app-4b', level: 'الإدارة العليا', title: 'المالك والمستثمر الرئيسي', person: 'أ/ أبو خالد', party: 'شركتنا', job_status: 'معيّن', duties: 'الاعتماد الاستثماري والاستراتيجي العام' },
+      { id: 'tm-2', created_at: now, app_id: 'app-4b', level: 'الإدارة العليا', title: 'مدير قطاع التكنولوجيا وإدارة المشروعات الرقمية', person: 'المهندس سامح يس', party: 'شركتنا', job_status: 'معيّن', reports_to: 'أ/ أبو خالد', duties: 'الاعتماد الفني وإدارة المشروعات الرقمية والأمان والأصول التقنية (مفصول عن الاعتماد المالي)' },
+      { id: 'tm-3', created_at: now, app_id: 'app-4b', level: 'الإدارة العليا', title: 'المالك والمستثمر الرئيسي', person: 'أ/ أبو خالد', party: 'شركتنا', job_status: 'معيّن', duties: 'الاعتماد الاستثماري والتعاقدي والاستراتيجي العام' },
       { id: 'tm-4', created_at: now, app_id: 'app-4b', level: 'الإدارة العليا', title: 'المدير المالي (CFO)', person: 'أ/ هاني', party: 'شركتنا', job_status: 'معيّن', reports_to: 'أ/ أبو خالد', duties: 'الإدارة المالية، فوري، الفواتير الضريبية ETA، ومطعم العجوزة' },
       { id: 'tm-5', created_at: now, app_id: 'app-4b', level: 'إدارة المنتج والمشروع', title: 'قيادة غرفة عمليات النقل الذكي', person: 'م/ موفق و م/ عمرو', party: 'شركتنا', job_status: 'معيّن', reports_to: 'المهندس عماد الشرقاوي', duties: 'تشغيل الأسطول، الكباتن، الكول سنتر، والتسعير' },
-      { id: 'tm-6', created_at: now, app_id: 'app-4b', level: 'الهندسة والتطوير', title: 'شركة التطوير البرمجي', person: 'قيمة تك (ValueTech)', party: 'مقاول خارجي', job_status: 'معيّن', reports_to: 'المهندس سامح يس', duties: 'تطوير تطبيقات 4B ووكالة ودارو ولوحات الإدارة' },
+      { id: 'tm-6', created_at: now, app_id: 'app-4b', level: 'الهندسة والتطوير', title: 'شركة التطوير البرمجي', person: 'قيمة تك (ValueTech)', party: 'مقاول خارجي', job_status: 'معيّن', reports_to: 'المهندس سامح يس', duties: 'تطوير تطبيقات 4B وكابتن مشاوير ووكالة ودارو ولوحات الإدارة' },
       { id: 'tm-7', created_at: now, app_id: 'app-4b', level: 'الهندسة والتطوير', title: 'مهندس برمجيات ومساعد تقني', person: 'م/ أحمد عبيد', party: 'شركتنا', job_status: 'معيّن', reports_to: 'المهندس عماد الشرقاوي', duties: 'الدعم الهندسي المباشر وصيانة الأنظمة بالمقر' },
-      { id: 'tm-8', created_at: now, app_id: 'app-4b', level: 'الجودة', title: 'مسؤول ضمان الجودة (QA)', person: 'م/ علي (QA مكتب 7)', party: 'شركتنا', job_status: 'معيّن', reports_to: 'المهندس سامح يس', duties: 'اختبار التطبيقات ومطابقة فيجما وتقارير الباجز' },
-      { id: 'tm-9', created_at: now, app_id: 'app-4b', level: 'الأعمال والدعم', title: 'المستشار القانوني والمحامي', person: 'أ/ محمد مصطفى', party: 'استشاري', job_status: 'معيّن', reports_to: 'أ/ أبو خالد', duties: 'تراخيص LTRA، حماية الملكية الفكرية، ومراجعة العقود' },
+      { id: 'tm-8', created_at: now, app_id: 'app-4b', level: 'الجودة', title: 'مسؤول ضمان الجودة (QA)', person: 'م/ علي (QA مكتب 7)', party: 'شركتنا', job_status: 'معيّن', reports_to: 'المهندس سامح يس', duties: 'اختبار التطبيقات ومطابقة فيجما وتقارير الباجز على هواتف حقيقية' },
+      { id: 'tm-9', created_at: now, app_id: 'app-4b', level: 'الأعمال والدعم', title: 'المستشار القانوني والمحامي', person: 'أ/ محمد مصطفى', party: 'استشاري', job_status: 'معيّن', reports_to: 'أ/ أبو خالد', duties: 'تراخيص LTRA، حماية الملكية الفكرية، ومراجعة العقود الرسمية' },
       { id: 'tm-10', created_at: now, app_id: 'app-4b', level: 'الأعمال والدعم', title: 'مسؤولة الموارد البشرية (HR)', person: 'أ/ سارة حسن', party: 'شركتنا', job_status: 'معيّن', reports_to: 'المهندس عماد الشرقاوي', duties: 'شؤون الموظفين، جهاز البصمة، وعهدة الأجهزة' },
-      { id: 'tm-11', created_at: now, app_id: 'app-wikala', level: 'الإدارة العليا', title: 'رئيس قطاع التكنولوجيا (CTO)', person: 'المهندس سامح يس', party: 'شركتنا', job_status: 'معيّن', reports_to: 'أ/ أبو خالد' },
-      { id: 'tm-12', created_at: now, app_id: 'app-daro', level: 'الإدارة العليا', title: 'رئيس قطاع التكنولوجيا (CTO)', person: 'المهندس سامح يس', party: 'شركتنا', job_status: 'معيّن', reports_to: 'أ/ أبو خالد' },
+      { id: 'tm-11', created_at: now, app_id: 'app-captain', level: 'الإدارة العليا', title: 'مدير قطاع التكنولوجيا وإدارة المشروعات الرقمية', person: 'المهندس سامح يس', party: 'شركتنا', job_status: 'معيّن', reports_to: 'أ/ أبو خالد', duties: 'مراجعة CompreFace وGPS Integrity Test 01 وربط LTRA' },
+      { id: 'tm-12', created_at: now, app_id: 'app-wikala', level: 'الإدارة العليا', title: 'مدير قطاع التكنولوجيا وإدارة المشروعات الرقمية', person: 'المهندس سامح يس', party: 'شركتنا', job_status: 'معيّن', reports_to: 'أ/ أبو خالد', duties: 'استلام الكود والـ Keystore (التشغيل مؤجل لما بعد 4B)' },
+      { id: 'tm-13', created_at: now, app_id: 'app-daro', level: 'الإدارة العليا', title: 'مدير قطاع التكنولوجيا وإدارة المشروعات الرقمية', person: 'المهندس سامح يس', party: 'شركتنا', job_status: 'معيّن', reports_to: 'أ/ أبو خالد', duties: 'إدارة حصر عيوب Figma الـ 8 (التنفيذ مؤجل لما بعد 4B)' },
     ],
   };
 }
 
+function mergeSeedRowsById(existing: AnyRecord[], seedRows: AnyRecord[]): AnyRecord[] {
+  const seedMap = new Map(seedRows.map((row) => [row.id, row]));
+  const seen = new Set<string>();
+  const merged = existing.map((row) => {
+    seen.add(row.id);
+    const canonical = seedMap.get(row.id);
+    if (!canonical) return row;
+    // Refresh canonical metadata while keeping user status/acceptance/notes if modified
+    return {
+      ...canonical,
+      ...row,
+      name: canonical.name ?? row.name,
+      description: canonical.description ?? row.description,
+      platforms: canonical.platforms ?? row.platforms,
+      service: canonical.service ?? row.service,
+      due_date: row.due_date || canonical.due_date,
+      amount: canonical.amount ?? row.amount,
+    };
+  });
+  seedRows.forEach((seedRow) => {
+    if (!seen.has(seedRow.id)) {
+      merged.push(seedRow);
+    }
+  });
+  return merged;
+}
+
+function ensureLatestSeedSync(): void {
+  if (typeof window === 'undefined') return;
+  const savedVersion = window.localStorage.getItem(SEED_VERSION_KEY);
+  if (savedVersion === SEED_SYNC_VERSION) return;
+
+  const fresh = buildInitialLocalDb();
+  const rawDb = window.localStorage.getItem(LOCAL_DB_KEY);
+  if (!rawDb) {
+    window.localStorage.setItem(LOCAL_DB_KEY, JSON.stringify(fresh));
+  } else {
+    try {
+      const parsed = JSON.parse(rawDb) as Partial<Record<TableId, AnyRecord[]>>;
+      const synced = {} as Record<TableId, AnyRecord[]>;
+      (Object.keys(fresh) as TableId[]).forEach((tableId) => {
+        const currentRows = Array.isArray(parsed[tableId]) ? parsed[tableId]! : [];
+        synced[tableId] = mergeSeedRowsById(currentRows, fresh[tableId]);
+      });
+      window.localStorage.setItem(LOCAL_DB_KEY, JSON.stringify(synced));
+    } catch {
+      window.localStorage.setItem(LOCAL_DB_KEY, JSON.stringify(fresh));
+    }
+  }
+
+  // Sync Meshawir canonical caches (preserve user task/verification statuses while refreshing latest descriptions & due dates)
+  const syncById = <T extends { id: string }>(
+    key: string,
+    seed: T[],
+    preserveFields: Array<keyof T> = []
+  ) => {
+    const storageKey = MESHAWIR_CACHE_PREFIX + key;
+    const raw = window.localStorage.getItem(storageKey);
+    if (!raw) {
+      window.localStorage.setItem(storageKey, JSON.stringify(seed));
+      return;
+    }
+    try {
+      const existing = JSON.parse(raw) as T[];
+      if (!Array.isArray(existing) || existing.length === 0) {
+        window.localStorage.setItem(storageKey, JSON.stringify(seed));
+        return;
+      }
+      const existingMap = new Map(existing.map((item) => [item.id, item]));
+      const seedIds = new Set(seed.map((s) => s.id));
+      const updatedSeed = seed.map((seedItem) => {
+        const prev = existingMap.get(seedItem.id);
+        if (!prev) return seedItem;
+        const next = { ...seedItem };
+        preserveFields.forEach((field) => {
+          if (prev[field] !== undefined && prev[field] !== null && prev[field] !== '') {
+            next[field] = prev[field];
+          }
+        });
+        return next;
+      });
+      const customRows = existing.filter((item) => !seedIds.has(item.id));
+      window.localStorage.setItem(storageKey, JSON.stringify([...updatedSeed, ...customRows]));
+    } catch {
+      window.localStorage.setItem(storageKey, JSON.stringify(seed));
+    }
+  };
+
+  syncById<RackDevice>('rack_devices', MESHAWIR_RACK_DEVICES);
+  syncById<RackPort>('rack_ports', MESHAWIR_RACK_PORTS);
+  syncById<ProjectTaskItem>('project_tasks', MESHAWIR_TASKS, ['status']);
+  syncById<SystemInquiryItem>('system_inquiries', MESHAWIR_INQUIRIES, ['answered', 'answer']);
+  syncById<VerificationMatrixItem>('verification_30', VERIFICATION_MATRIX_30, [
+    'status',
+    'verificationNote',
+  ]);
+
+  window.localStorage.setItem(SEED_VERSION_KEY, SEED_SYNC_VERSION);
+}
+
+export function forceSyncCachesWithLatestSeed(): void {
+  if (typeof window === 'undefined') return;
+  window.localStorage.removeItem(SEED_VERSION_KEY);
+  ensureLatestSeedSync();
+}
+
 function getLocalDb(): Record<TableId, AnyRecord[]> {
   if (typeof window === 'undefined') return buildInitialLocalDb();
+  ensureLatestSeedSync();
   const raw = window.localStorage.getItem(LOCAL_DB_KEY);
   if (!raw) {
     const fresh = buildInitialLocalDb();
@@ -177,12 +299,29 @@ function getLocalDb(): Record<TableId, AnyRecord[]> {
     return fresh;
   }
   try {
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw) as Record<TableId, AnyRecord[]>;
+    return parsed;
   } catch {
     const fresh = buildInitialLocalDb();
     window.localStorage.setItem(LOCAL_DB_KEY, JSON.stringify(fresh));
     return fresh;
   }
+}
+
+export function getFullLocalSnapshot(): {
+  crmDb: Record<TableId, AnyRecord[]>;
+  meshawirTasks: ProjectTaskItem[];
+  rackDevices: RackDevice[];
+  rackPorts: RackPort[];
+  verification30: VerificationMatrixItem[];
+} {
+  return {
+    crmDb: getLocalDb(),
+    meshawirTasks: readMeshawirCache<ProjectTaskItem>('project_tasks', MESHAWIR_TASKS),
+    rackDevices: readMeshawirCache<RackDevice>('rack_devices', MESHAWIR_RACK_DEVICES),
+    rackPorts: readMeshawirCache<RackPort>('rack_ports', MESHAWIR_RACK_PORTS),
+    verification30: readMeshawirCache<VerificationMatrixItem>('verification_30', VERIFICATION_MATRIX_30),
+  };
 }
 
 function saveLocalDb(db: Record<TableId, AnyRecord[]>) {
@@ -336,6 +475,7 @@ export async function deleteTableRow(tableId: TableId, id: string): Promise<void
 
 function readMeshawirCache<T>(key: string, fallback: T[]): T[] {
   if (typeof window === 'undefined') return fallback;
+  ensureLatestSeedSync();
   try {
     const raw = window.localStorage.getItem(MESHAWIR_CACHE_PREFIX + key);
     if (!raw) {
@@ -419,8 +559,16 @@ export async function addRackDeviceItem(device: RackDevice): Promise<RackDevice[
   return next;
 }
 
+function mergeTaskDueDates(rows: ProjectTaskItem[]): ProjectTaskItem[] {
+  const seedDueById = new Map(MESHAWIR_TASKS.map((t) => [t.id, t.due_date]));
+  return rows.map((t) => ({
+    ...t,
+    due_date: t.due_date || seedDueById.get(t.id),
+  }));
+}
+
 export async function loadMeshawirTasks(): Promise<ProjectTaskItem[]> {
-  const cached = readMeshawirCache<ProjectTaskItem>('project_tasks', MESHAWIR_TASKS);
+  const cached = mergeTaskDueDates(readMeshawirCache<ProjectTaskItem>('project_tasks', MESHAWIR_TASKS));
   try {
     const sb = getSupabaseClient();
     const { data, error } = await sb
@@ -428,8 +576,9 @@ export async function loadMeshawirTasks(): Promise<ProjectTaskItem[]> {
       .select('*')
       .order('task_number', { ascending: true });
     if (!error && Array.isArray(data) && data.length > 0) {
-      writeMeshawirCache('project_tasks', data as ProjectTaskItem[]);
-      return data as ProjectTaskItem[];
+      const merged = mergeTaskDueDates(data as ProjectTaskItem[]);
+      writeMeshawirCache('project_tasks', merged);
+      return merged;
     }
   } catch {
     // fallback
@@ -479,3 +628,72 @@ export async function answerSystemInquiry(id: string, answer: string): Promise<S
   }
   return next;
 }
+
+export async function loadVerificationMatrix(): Promise<VerificationMatrixItem[]> {
+  const cached = readMeshawirCache<VerificationMatrixItem>('verification_30', VERIFICATION_MATRIX_30);
+  try {
+    const sb = getSupabaseClient();
+    const { data, error } = await sb
+      .from('meshawir_verification_checks')
+      .select('*')
+      .order('num', { ascending: true });
+    if (!error && Array.isArray(data) && data.length > 0) {
+      const mapped: VerificationMatrixItem[] = data.map((row: any) => ({
+        id: row.id,
+        num: Number(row.num),
+        category: row.category,
+        title: row.title,
+        status: row.status as KnowledgeStatus,
+        contextNote: row.context_note ?? row.contextNote ?? '',
+        verificationNote: row.verification_note ?? row.verificationNote ?? '',
+      }));
+      writeMeshawirCache('verification_30', mapped);
+      return mapped;
+    }
+  } catch {
+    // fallback to seeded 30-point verification matrix
+  }
+  return cached;
+}
+
+export async function updateVerificationItem(
+  id: string,
+  status: KnowledgeStatus,
+  verificationNote?: string
+): Promise<VerificationMatrixItem[]> {
+  const current = readMeshawirCache<VerificationMatrixItem>('verification_30', VERIFICATION_MATRIX_30);
+  const next = current.map((v) =>
+    v.id === id
+      ? {
+          ...v,
+          status,
+          verificationNote: verificationNote !== undefined ? verificationNote : v.verificationNote,
+        }
+      : v
+  );
+  writeMeshawirCache('verification_30', next);
+
+  const target = next.find((v) => v.id === id);
+  if (target) {
+    try {
+      const sb = getSupabaseClient();
+      await sb.from('meshawir_verification_checks').upsert(
+        {
+          id: target.id,
+          num: target.num,
+          category: target.category,
+          title: target.title,
+          status: target.status,
+          context_note: target.contextNote,
+          verification_note: target.verificationNote,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'id' }
+      );
+    } catch {
+      // cached locally
+    }
+  }
+  return next;
+}
+

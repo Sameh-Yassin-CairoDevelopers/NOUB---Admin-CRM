@@ -60,15 +60,45 @@ export function daysLeft(dateStr: string | null | undefined): number | null {
   return Math.round((target.getTime() - today.getTime()) / 86400000);
 }
 
+export const DEFAULT_ALERT_LEAD_DAYS = 7;
+const ALERT_LEAD_DAYS_KEY = 'noub_crm_alert_lead_days_v1';
+
+export function getAlertLeadDays(): number {
+  if (typeof window === 'undefined') return DEFAULT_ALERT_LEAD_DAYS;
+  try {
+    const raw = window.localStorage.getItem(ALERT_LEAD_DAYS_KEY);
+    const parsed = Number(raw);
+    if (Number.isFinite(parsed) && parsed >= 1 && parsed <= 60) {
+      return Math.round(parsed);
+    }
+  } catch {
+    // fallback to default
+  }
+  return DEFAULT_ALERT_LEAD_DAYS;
+}
+
+export function saveAlertLeadDays(days: number): number {
+  const safe = Number.isFinite(days)
+    ? Math.max(1, Math.min(60, Math.round(days)))
+    : DEFAULT_ALERT_LEAD_DAYS;
+  if (typeof window !== 'undefined') {
+    window.localStorage.setItem(ALERT_LEAD_DAYS_KEY, String(safe));
+  }
+  return safe;
+}
+
 export interface DueStatusInfo {
   label: 'متأخر' | 'قريب' | 'سليم';
   tone: 'bad' | 'warn' | 'ok';
 }
 
-export function getDueStatus(days: number | null): DueStatusInfo | null {
+export function getDueStatus(
+  days: number | null,
+  leadDays: number = getAlertLeadDays()
+): DueStatusInfo | null {
   if (days === null || days === undefined) return null;
   if (days < 0) return { label: 'متأخر', tone: 'bad' };
-  if (days <= 7) return { label: 'قريب', tone: 'warn' };
+  if (days <= leadDays) return { label: 'قريب', tone: 'warn' };
   return { label: 'سليم', tone: 'ok' };
 }
 
