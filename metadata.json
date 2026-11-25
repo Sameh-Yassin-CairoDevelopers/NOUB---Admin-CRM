@@ -1,0 +1,6 @@
+{
+  "name": "NOUB CRM — متابعة الاشتراكات والتطبيقات",
+  "description": "نظام متابعة الاشتراكات والدومينات ومفاتيح API ومسار استلام التطبيقات والهيكل الوظيفي المرتبط بـ Supabase.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

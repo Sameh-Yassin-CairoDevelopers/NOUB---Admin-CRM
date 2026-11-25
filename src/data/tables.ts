@@ -1,0 +1,235 @@
+import type { FieldDef, TableDef } from '../types/crm';
+
+export const PWD_TYPES = ['برايفت (الماستر)', 'بابليك', 'جوجل لوجن'];
+export const CYCLES = ['شهري', 'ربع سنوي', 'نصف سنوي', 'سنوي'];
+export const DELIVERABLE_STATUSES = ['تم الاستلام', 'قيد التنفيذ', 'لم يبدأ', 'يحتاج تعديل'];
+export const PRIORITIES = ['عالية', 'متوسطة', 'منخفضة'];
+export const SITES_LIST = ['WIKALA', 'DARO', '4B', 'عدة تطبيقات', 'أخرى'];
+export const BILLING_TYPES = ['اشتراك ثابت', 'حسب الاستخدام', 'رصيد مسبق', 'مجاني'];
+export const STAGES = [
+  'التخطيط والمتطلبات',
+  'التصميم',
+  'التطوير',
+  'الاختبار والجودة',
+  'الإطلاق والتشغيل',
+];
+export const TEAM_LEVELS = [
+  'الإدارة العليا',
+  'إدارة المنتج والمشروع',
+  'التصميم',
+  'الهندسة والتطوير',
+  'الجودة',
+  'الأعمال والدعم',
+];
+
+const f = (
+  key: string,
+  label: string,
+  type: FieldDef['type'] = 'text',
+  opts: Partial<Omit<FieldDef, 'key' | 'label' | 'type'>> = {}
+): FieldDef => ({ key, label, type, ...opts });
+
+export const TABLES: TableDef[] = [
+  {
+    id: 'telecom_lines',
+    name: 'الاتصالات',
+    group: 'subscriptions',
+    description: 'متابعة الخطوط الأرضية وخطوط المحمول ومواعيد سداد الباقات والإنترنت.',
+    fields: [
+      f('name', 'الاسم / الوصف', 'text', { required: true, bold: true }),
+      f('kind', 'النوع', 'list', { options: ['أرضي', 'محمول'], filterable: true }),
+      f('number', 'الرقم', 'text', { bold: true }),
+      f('service', 'الخدمة'),
+      f('provider', 'المزود', 'text', { filterable: true }),
+      f('plan', 'الباقة'),
+      f('cycle', 'دورة السداد', 'list', { options: CYCLES, filterable: true }),
+      f('amount', 'المبلغ (ج.م)', 'num', { bold: true }),
+      f('due_date', 'الاستحقاق القادم', 'date', { due: true, bold: true }),
+      f('notes', 'ملاحظات', 'text', { hiddenInGrid: true }),
+    ],
+  },
+  {
+    id: 'domains',
+    name: 'الدومينات والاستضافة',
+    group: 'subscriptions',
+    description: 'سجل النطاقات النشطة والاستضافة وشهادات الأمان ومواعيد التجديد.',
+    fields: [
+      f('name', 'الدومين / الخدمة', 'text', { required: true, bold: true }),
+      f('kind', 'النوع', 'list', { options: ['دومين', 'استضافة', 'SSL', 'بريد', 'أخرى'], filterable: true }),
+      f('provider', 'المزود'),
+      f('start_date', 'تاريخ الاشتراك', 'date', { hiddenInGrid: true }),
+      f('cycle', 'دورة السداد', 'list', { options: CYCLES }),
+      f('amount', 'المبلغ (ج.م)', 'num', { bold: true }),
+      f('due_date', 'التجديد القادم', 'date', { due: true, bold: true }),
+      f('auto_renew', 'تجديد تلقائي', 'bool'),
+      f('notes', 'ملاحظات', 'text', { hiddenInGrid: true }),
+    ],
+  },
+  {
+    id: 'wanted_domains',
+    name: 'دومينات مطلوبة',
+    group: 'subscriptions',
+    description: 'قائمة النطاقات المقترحة للشراء والمحجوزة حسب الأولوية والمشروع.',
+    fields: [
+      f('name', 'الاسم المقترح', 'text', { required: true, bold: true }),
+      f('ext', 'الامتداد', 'list', {
+        options: ['.com', '.com.eg', '.eg', '.net', '.org', '.app', '.io', '.store'],
+      }),
+      f('provider', 'المزود'),
+      f('price', 'السعر السنوي', 'num', { bold: true }),
+      f('priority', 'الأولوية', 'list', { options: PRIORITIES, filterable: true }),
+      f('status', 'الحالة', 'list', {
+        options: ['فكرة', 'متاح', 'محجوز', 'تم الشراء'],
+        bold: true,
+        filterable: true,
+      }),
+      f('project', 'المشروع', 'list', { options: SITES_LIST, filterable: true }),
+      f('notes', 'ملاحظات', 'text', { hiddenInGrid: true }),
+    ],
+  },
+  {
+    id: 'providers',
+    name: 'مزودو الخدمات',
+    group: 'subscriptions',
+    description: 'حسابات مزودي الخدمات السحابية والوسائط وتصنيف كلمات السر لتسليمها لفريق الـ IT.',
+    fields: [
+      f('name', 'المزود', 'text', { required: true, bold: true }),
+      f('category', 'التصنيف', 'list', {
+        options: [
+          'سحابة / متاجر',
+          'متاجر تطبيقات',
+          'وسائط',
+          'فيديو / صوت',
+          'رسائل / إشعارات',
+          'دفع',
+          'خرائط',
+          'مصادقة / تحقق',
+          'قواعد بيانات',
+          'تحليلات',
+          'أخرى',
+        ],
+        filterable: true,
+      }),
+      f('site', 'الموقع / التطبيق', 'list', { options: SITES_LIST, filterable: true }),
+      f('login_url', 'رابط الدخول', 'text', { hiddenInGrid: true }),
+      f('username', 'اسم المستخدم / الإيميل', 'text', { hiddenInGrid: true }),
+      f('pwd_type', 'نوع كلمة السر', 'list', { options: PWD_TYPES, bold: true, filterable: true }),
+      f('start_date', 'تاريخ الاشتراك', 'date', { hiddenInGrid: true }),
+      f('funding', 'نوع التمويل', 'list', { options: [...BILLING_TYPES, 'ثابت + استخدام'] }),
+      f('amount', 'المبلغ (ج.م)', 'num', { bold: true }),
+      f('cycle', 'الدورة', 'list', { options: [...CYCLES, 'حسب الاستخدام'] }),
+      f('due_date', 'الاستحقاق القادم', 'date', { due: true, bold: true }),
+      f('owner', 'مسؤول الحساب'),
+      f('notes', 'ملاحظات', 'text', { hiddenInGrid: true }),
+    ],
+  },
+  {
+    id: 'api_keys',
+    name: 'مفاتيح API',
+    group: 'subscriptions',
+    description: 'توثيق مفاتيح الـ API والبيئات ومكان حفظ الأسرار وحدود التنبيه.',
+    fields: [
+      f('provider', 'المزود', 'text', { required: true, bold: true }),
+      f('service', 'الخدمة / API'),
+      f('site', 'الموقع / التطبيق', 'list', { options: SITES_LIST, filterable: true }),
+      f('env', 'البيئة', 'list', { options: ['Production', 'Test', 'Development'], filterable: true }),
+      f('key_label', 'اسم المفتاح (مش السر)', 'text', { bold: true }),
+      f('secret_location', 'مكان حفظ السر'),
+      f('created_on', 'تاريخ الإنشاء', 'date', { hiddenInGrid: true }),
+      f('expires_on', 'تاريخ الانتهاء', 'date', { due: true, bold: true }),
+      f('billing', 'الفوترة', 'list', { options: BILLING_TYPES, filterable: true }),
+      f('alert_limit', 'حد التنبيه (ج.م)', 'num', { hiddenInGrid: true }),
+      f('notes', 'ملاحظات', 'text', { hiddenInGrid: true }),
+    ],
+  },
+  {
+    id: 'sites',
+    name: 'المواقع والتطبيقات',
+    group: 'subscriptions',
+    description: 'دليل تسليم المواقع والروابط ومسؤولي الـ IT ونوع بيانات الدخول.',
+    fields: [
+      f('name', 'الموقع / التطبيق', 'text', { required: true, bold: true }),
+      f('url', 'الرابط'),
+      f('purpose', 'الغرض'),
+      f('providers', 'المزودون'),
+      f('pwd_type', 'نوع كلمة السر', 'list', { options: PWD_TYPES, bold: true, filterable: true }),
+      f('it_owner', 'مسؤول الـ IT'),
+      f('handover_date', 'تاريخ التسليم', 'date'),
+      f('notes', 'ملاحظات', 'text', { hiddenInGrid: true }),
+    ],
+  },
+  {
+    id: 'payments',
+    name: 'سجل السداد',
+    group: 'finance',
+    description: 'توثيق المدفوعات المنفذة والمراجع وطرق الدفع.',
+    fields: [
+      f('paid_on', 'تاريخ السداد', 'date', { required: true, bold: true }),
+      f('item', 'البند', 'text', { required: true, bold: true }),
+      f('amount', 'المبلغ (ج.م)', 'num', { required: true, bold: true }),
+      f('method', 'طريقة الدفع', 'list', {
+        options: ['نقدي', 'تحويل بنكي', 'بطاقة', 'فوري', 'محفظة إلكترونية', 'أخرى'],
+        filterable: true,
+      }),
+      f('ref', 'المرجع'),
+      f('notes', 'ملاحظات', 'text', { hiddenInGrid: true }),
+    ],
+  },
+  {
+    id: 'apps',
+    name: 'التطبيقات',
+    group: 'apps',
+    description: 'قائمة التطبيقات الرئيسية (4B، DARO، WIKALA) وحالاتها ومواعيد الإطلاق.',
+    fields: [
+      f('name', 'التطبيق', 'text', { required: true, bold: true }),
+      f('description', 'الوصف'),
+      f('platforms', 'المنصات'),
+      f('start_date', 'بداية المشروع', 'date'),
+      f('launch_date', 'الإطلاق المستهدف', 'date'),
+      f('status', 'الحالة', 'list', {
+        options: ['لم يبدأ', 'قيد التنفيذ', 'في الفترة التجريبية', 'تم الإطلاق', 'متوقف'],
+        bold: true,
+        filterable: true,
+      }),
+    ],
+  },
+  {
+    id: 'deliverables',
+    name: 'مسار الاستلام',
+    group: 'apps',
+    description: 'جدول استلام المراحل والبنود الفنية لكل تطبيق وحالة القبول والاختبار.',
+    fields: [
+      f('app_id', 'التطبيق', 'ref', { refTable: 'apps', required: true, bold: true, filterable: true }),
+      f('stage', 'المرحلة', 'list', { options: STAGES, filterable: true }),
+      f('item', 'بند التسليم', 'text', { required: true, bold: true }),
+      f('owner', 'المسؤول'),
+      f('start_date', 'البداية', 'date'),
+      f('end_date', 'النهاية', 'date', { due: true }),
+      f('received_on', 'الاستلام الفعلي', 'date', { hiddenInGrid: true }),
+      f('status', 'الحالة', 'list', { options: DELIVERABLE_STATUSES, bold: true, filterable: true }),
+      f('acceptance', 'القبول', 'list', { options: ['اجتاز', 'لم يجتز', 'لم يُختبر'], filterable: true }),
+      f('notes', 'ملاحظات', 'text', { hiddenInGrid: true }),
+    ],
+  },
+  {
+    id: 'team',
+    name: 'الهيكل الوظيفي',
+    group: 'apps',
+    description: 'توزيع الأدوار والمسؤوليات الإدارية والتقنية لكل تطبيق.',
+    fields: [
+      f('app_id', 'التطبيق', 'ref', { refTable: 'apps', required: true, bold: true, filterable: true }),
+      f('level', 'المستوى', 'list', { options: TEAM_LEVELS, filterable: true }),
+      f('title', 'المسمى الوظيفي', 'text', { required: true, bold: true }),
+      f('person', 'الاسم', 'text', { bold: true }),
+      f('party', 'الجهة', 'list', { options: ['شركتنا', 'مقاول خارجي', 'استشاري'], filterable: true }),
+      f('job_status', 'حالة الوظيفة', 'list', {
+        options: ['معيّن', 'شاغر', 'قيد التعيين'],
+        bold: true,
+        filterable: true,
+      }),
+      f('reports_to', 'يتبع'),
+      f('contact', 'التواصل', 'text', { hiddenInGrid: true }),
+      f('duties', 'المسؤوليات', 'text', { hiddenInGrid: true }),
+    ],
+  },
+];
