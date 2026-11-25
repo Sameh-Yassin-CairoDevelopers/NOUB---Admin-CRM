@@ -42,6 +42,7 @@ export const DataExportModal: React.FC<DataExportModalProps> = ({
   onCacheSynced,
 }) => {
   const [copiedSql, setCopiedSql] = useState(false);
+  const [showSqlPreview, setShowSqlPreview] = useState(false);
   const [downloadingXlsx, setDownloadingXlsx] = useState(false);
   const [syncedMsg, setSyncedMsg] = useState(false);
 
@@ -134,7 +135,7 @@ export const DataExportModal: React.FC<DataExportModalProps> = ({
                 <span className="font-mono font-semibold">ON CONFLICT DO UPDATE</span> لتحديث جميع البيانات الجديدة (4B، كابتن مشاوير، Daro وWeKaLa المؤجلين، ER8411 Static IP + WireGuard، 58 منفذ راك، 16 كاميرا، 12 فاتورة، 30 بند تحقق، 105 مهمة مشتركة) دون أي تضارب أو تكرار.
               </p>
               <p className="text-[11px] font-mono text-[var(--app-muted)] mt-1.5" dir="ltr">
-                public/exports/meshawir_noub_crm_latest.sql
+                /exports/meshawir_noub_crm_latest.sql
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -163,7 +164,31 @@ export const DataExportModal: React.FC<DataExportModalProps> = ({
                 <Download className="w-4 h-4" />
                 <span>تحميل ملف SQL</span>
               </button>
+              <a
+                href="/exports/meshawir_noub_crm_latest.sql"
+                download="meshawir_noub_crm_latest.sql"
+                className="inline-flex items-center gap-2 px-3.5 py-2 bg-[var(--app-surface)] border border-[var(--app-border)] hover:bg-[var(--app-surface-2)] text-[var(--app-text)] text-xs font-semibold rounded-lg whitespace-nowrap"
+              >
+                <Database className="w-4 h-4" />
+                <span>رابط مباشر للملف</span>
+              </a>
+              <button
+                type="button"
+                onClick={() => setShowSqlPreview((v) => !v)}
+                className="inline-flex items-center gap-1.5 px-3 py-2 bg-transparent border border-[var(--app-border)] hover:bg-[var(--app-surface-2)] text-[var(--app-muted)] hover:text-[var(--app-text)] text-xs font-semibold rounded-lg cursor-pointer whitespace-nowrap"
+              >
+                <span>{showSqlPreview ? 'إخفاء معاينة الكود' : 'عرض كود SQL هنا'}</span>
+              </button>
             </div>
+            {showSqlPreview && (
+              <textarea
+                readOnly
+                dir="ltr"
+                value={LATEST_UNIFIED_SUPABASE_SQL}
+                onFocus={(e) => e.currentTarget.select()}
+                className="w-full h-56 p-3 rounded-lg border border-[var(--app-border)] bg-[var(--app-surface)] text-[11px] font-mono leading-relaxed text-[var(--app-text)] focus:outline-none focus:ring-2 focus:ring-[var(--app-accent)]"
+              />
+            )}
           </div>
 
           {/* Card 2: Latest Multi-Sheet Excel Workbook */}

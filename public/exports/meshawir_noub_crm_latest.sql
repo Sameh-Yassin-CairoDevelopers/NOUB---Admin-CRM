@@ -182,6 +182,9 @@ DECLARE
   v_app_cap uuid;
   v_app_daro uuid;
   v_app_wikala uuid;
+  r_prv record;
+  r_key record;
+  r_site record;
 BEGIN
   -- 1) Apps (update legacy names if present, otherwise update by latest name or insert)
   UPDATE public.apps
@@ -297,44 +300,76 @@ BEGIN
   ) AS v(name, ext, provider, priority, status, project, notes)
   WHERE NOT EXISTS (SELECT 1 FROM public.wanted_domains w WHERE w.name = v.name);
 
-  -- 5) Providers (NOUB CRM table)
-  INSERT INTO public.providers (name, category, site, login_url, username, pwd_type, funding, amount, cycle, owner, notes)
-  SELECT v.name, v.category, v.site, v.login_url, v.username, v.pwd_type, v.funding, v.amount, v.cycle, v.owner, v.notes
-  FROM (VALUES
-    ('المصرية للاتصالات (WE Cloud & WAF)', 'سحابة / متاجر', '4B', 'https://cloud.te.eg/portal', 'mashweer_telecom_admin', 'برايفت (الماستر)', 'اشتراك ثابت', 201874::numeric, 'ربع سنوي', 'المهندس عماد الشرقاوي + المهندس سامح يس', 'PO #6078933 بإجمالي 807,496 ج.م/سنة'),
-    ('المصرية للاتصالات (WE Fiber 24Mbps + 6x4Mbps)', 'أخرى', 'عدة تطبيقات', 'https://cloud.te.eg/portal', NULL, 'برايفت (الماستر)', 'اشتراك ثابت', 90000::numeric, 'ربع سنوي', 'المهندس عماد الشرقاوي + م/ أحمد محرم', 'PO #6078927 بإجمالي 360,000 ج.م/سنة'),
-    ('Google Cloud & Maps', 'خرائط', 'عدة تطبيقات', 'https://console.cloud.google.com', 'admin@mashweer.com.eg', 'جوجل لوجن', 'حسب الاستخدام', NULL::numeric, 'حسب الاستخدام', 'المهندس سامح يس + أ/ هاني', NULL),
-    ('Cloudinary', 'وسائط', '4B', 'https://cloudinary.com', 'mashweer-cloud', 'برايفت (الماستر)', 'رصيد مسبق', NULL::numeric, NULL, 'المهندس سامح يس', NULL),
-    ('BroadNet SMS', 'رسائل / إشعارات', '4B', 'https://broadnetme.com/portal/login', 'mashawer', 'برايفت (الماستر)', 'رصيد مسبق', NULL::numeric, NULL, 'المهندس عماد الشرقاوي + المهندس سامح يس', NULL),
-    ('Twilio', 'رسائل / إشعارات', 'WIKALA', 'https://console.twilio.com', NULL, 'برايفت (الماستر)', 'رصيد مسبق', NULL::numeric, NULL, 'المهندس عماد الشرقاوي + المهندس سامح يس', NULL),
-    ('Fawry Enterprise', 'دفع', '4B', 'https://fawry.com', 'FAWRY_MERCHANT_CODE_MASHWEER', 'برايفت (الماستر)', 'حسب الاستخدام', NULL::numeric, NULL, 'أ/ هاني', NULL),
-    ('Supabase Cloud', 'قواعد بيانات', 'عدة تطبيقات', 'https://supabase.com/dashboard', 'salkyuytjvjxspxbawzg', 'برايفت (الماستر)', 'اشتراك ثابت', NULL::numeric, NULL, 'المهندس سامح يس', NULL),
-    ('Zoho Mail Lite (5 حسابات)', 'أخرى', 'عدة تطبيقات', 'https://mail.zoho.com', 'admin@mashweer.com.eg', 'برايفت (الماستر)', 'مجاني', NULL::numeric, NULL, 'المهندس عماد الشرقاوي', NULL)
-  ) AS v(name, category, site, login_url, username, pwd_type, funding, amount, cycle, owner, notes)
-  WHERE NOT EXISTS (SELECT 1 FROM public.providers p WHERE p.name = v.name);
+  -- 5) Providers (update legacy or matching rows, insert if missing)
+  FOR r_prv IN
+    SELECT * FROM (VALUES
+      ('المصرية للاتصالات (WE Cloud & WAF)', ARRAY['المصرية للاتصالات (WE)','WE Cloud','WE Cloud & WAF'], 'سحابة / متاجر', '4B', 'https://cloud.te.eg/portal', 'mashweer_telecom_admin', 'برايفت (الماستر)', 'اشتراك ثابت', 201874::numeric, 'ربع سنوي', 'المهندس عماد الشرقاوي + المهندس سامح يس', 'PO #6078933 بإجمالي 807,496 ج.م/سنة'),
+      ('المصرية للاتصالات (WE Fiber 24Mbps + 6x4Mbps)', ARRAY['WE Fiber','WE L3VPN'], 'أخرى', 'عدة تطبيقات', 'https://cloud.te.eg/portal', NULL, 'برايفت (الماستر)', 'اشتراك ثابت', 90000::numeric, 'ربع سنوي', 'المهندس عماد الشرقاوي + م/ أحمد محرم', 'PO #6078927 بإجمالي 360,000 ج.م/سنة'),
+      ('Google Cloud & Maps', ARRAY['Google','Google Cloud','Google Maps'], 'خرائط', 'عدة تطبيقات', 'https://console.cloud.google.com', 'admin@mashweer.com.eg', 'جوجل لوجن', 'حسب الاستخدام', NULL::numeric, 'حسب الاستخدام', 'المهندس سامح يس + أ/ هاني', NULL),
+      ('Cloudinary', ARRAY['Cloudinary'], 'وسائط', '4B', 'https://cloudinary.com', 'mashweer-cloud', 'برايفت (الماستر)', 'رصيد مسبق', NULL::numeric, NULL, 'المهندس سامح يس', NULL),
+      ('BroadNet SMS', ARRAY['BroadNet','Broadnet'], 'رسائل / إشعارات', '4B', 'https://broadnetme.com/portal/login', 'mashawer', 'برايفت (الماستر)', 'رصيد مسبق', NULL::numeric, NULL, 'المهندس عماد الشرقاوي + المهندس سامح يس', NULL),
+      ('Twilio', ARRAY['Twilio'], 'رسائل / إشعارات', 'WIKALA', 'https://console.twilio.com', NULL, 'برايفت (الماستر)', 'رصيد مسبق', NULL::numeric, NULL, 'المهندس عماد الشرقاوي + المهندس سامح يس', NULL),
+      ('Fawry Enterprise', ARRAY['Fawry','فوري'], 'دفع', '4B', 'https://fawry.com', 'FAWRY_MERCHANT_CODE_MASHWEER', 'برايفت (الماستر)', 'حسب الاستخدام', NULL::numeric, NULL, 'أ/ هاني', NULL),
+      ('Supabase Cloud', ARRAY['Supabase'], 'قواعد بيانات', 'عدة تطبيقات', 'https://supabase.com/dashboard', 'salkyuytjvjxspxbawzg', 'برايفت (الماستر)', 'اشتراك ثابت', NULL::numeric, NULL, 'المهندس سامح يس', NULL),
+      ('Zoho Mail Lite (5 حسابات)', ARRAY['Zoho Mail','Zoho'], 'أخرى', 'عدة تطبيقات', 'https://mail.zoho.com', 'admin@mashweer.com.eg', 'برايفت (الماستر)', 'مجاني', NULL::numeric, NULL, 'المهندس عماد الشرقاوي', NULL)
+    ) AS v(name, aliases, category, site, login_url, username, pwd_type, funding, amount, cycle, owner, notes)
+  LOOP
+    UPDATE public.providers
+    SET name = r_prv.name,
+        category = r_prv.category,
+        site = r_prv.site,
+        login_url = r_prv.login_url,
+        username = COALESCE(r_prv.username, username),
+        pwd_type = r_prv.pwd_type,
+        funding = r_prv.funding,
+        amount = COALESCE(r_prv.amount, amount),
+        cycle = COALESCE(r_prv.cycle, cycle),
+        owner = r_prv.owner,
+        notes = COALESCE(r_prv.notes, notes)
+    WHERE name = r_prv.name OR name = ANY(r_prv.aliases);
+    IF NOT FOUND THEN
+      INSERT INTO public.providers (name, category, site, login_url, username, pwd_type, funding, amount, cycle, owner, notes)
+      VALUES (r_prv.name, r_prv.category, r_prv.site, r_prv.login_url, r_prv.username, r_prv.pwd_type, r_prv.funding, r_prv.amount, r_prv.cycle, r_prv.owner, r_prv.notes);
+    END IF;
+  END LOOP;
 
-  -- 6) API Keys
-  INSERT INTO public.api_keys (provider, service, site, env, key_label, secret_location, billing)
-  SELECT v.provider, v.service, v.site, v.env, v.key_label, v.secret_location, v.billing
-  FROM (VALUES
-    ('Google Maps', 'Maps / Places / Directions', '4B', 'Production', '4B_SERVER_MAPS_KEY', 'خزنة الأسرار الإدارية / .env', 'حسب الاستخدام'),
-    ('BroadNet', 'OTP SMS Gateway', '4B', 'Production', 'BROADNET_API_KEY', 'خزنة الأسرار الإدارية', 'رصيد مسبق'),
-    ('Cloudinary', 'Signed Media Storage', '4B', 'Production', 'CLOUDINARY_API_SECRET', 'خزنة الأسرار الإدارية', 'رصيد مسبق'),
-    ('Fawry', 'Payment & Wallet Webhook', '4B', 'Test', 'FAWRY_MERCHANT_CODE_MASHWEER', 'خزنة الإدارة المالية', 'حسب الاستخدام')
-  ) AS v(provider, service, site, env, key_label, secret_location, billing)
-  WHERE NOT EXISTS (SELECT 1 FROM public.api_keys k WHERE k.key_label = v.key_label);
+  -- 6) API Keys (upsert by key_label)
+  FOR r_key IN
+    SELECT * FROM (VALUES
+      ('Google Maps', 'Maps / Places / Directions', '4B', 'Production', '4B_SERVER_MAPS_KEY', 'خزنة الأسرار الإدارية / .env', 'حسب الاستخدام'),
+      ('BroadNet', 'OTP SMS Gateway', '4B', 'Production', 'BROADNET_API_KEY', 'خزنة الأسرار الإدارية', 'رصيد مسبق'),
+      ('Cloudinary', 'Signed Media Storage', '4B', 'Production', 'CLOUDINARY_API_SECRET', 'خزنة الأسرار الإدارية', 'رصيد مسبق'),
+      ('Fawry', 'Payment & Wallet Webhook', '4B', 'Test', 'FAWRY_MERCHANT_CODE_MASHWEER', 'خزنة الإدارة المالية', 'حسب الاستخدام')
+    ) AS v(provider, service, site, env, key_label, secret_location, billing)
+  LOOP
+    UPDATE public.api_keys
+    SET provider = r_key.provider, service = r_key.service, site = r_key.site, env = r_key.env,
+        secret_location = r_key.secret_location, billing = r_key.billing
+    WHERE key_label = r_key.key_label;
+    IF NOT FOUND THEN
+      INSERT INTO public.api_keys (provider, service, site, env, key_label, secret_location, billing)
+      VALUES (r_key.provider, r_key.service, r_key.site, r_key.env, r_key.key_label, r_key.secret_location, r_key.billing);
+    END IF;
+  END LOOP;
 
-  -- 7) Sites
-  INSERT INTO public.sites (name, url, purpose, providers, pwd_type, it_owner)
-  SELECT v.name, v.url, v.purpose, v.providers, v.pwd_type, v.it_owner
-  FROM (VALUES
-    ('راوتر وفايروول TP-Link ER8411 (رئيسي)', 'https://192.168.10.1', 'إدارة خط WE ADSL + Static Public IP + Vodafone 5G + WireGuard VPN', 'مقر المعادي', 'برايفت (الماستر)', 'المهندس عماد الشرقاوي'),
-    ('سنترال Grandstream UCM6304A (604A)', 'https://192.168.30.1:8089', 'التحويلات 100-116 وWave عن بُعد (25–30 مستخدماً عبر WireGuard VLAN 30)', 'مقر المعادي', 'برايفت (الماستر)', 'المهندس عماد الشرقاوي'),
-    ('بوابة WE Cloud & F5 WAF', 'https://cloud.te.eg/portal', 'إدارة خوادم 4B السحابية وجدار F5 WAF', 'المصرية للاتصالات WE', 'برايفت (الماستر)', 'المهندس عماد الشرقاوي'),
-    ('لوحة EC للنطاقات والاستضافة', 'https://clients.ec.com.eg/clientarea.php', 'إدارة DNS وتجديد mashawer.com.eg', 'EC Egypt', 'برايفت (الماستر)', 'المهندس عماد الشرقاوي'),
-    ('لوحة Proxmox VE 8.x (Z440 #1)', 'https://192.168.10.20:8006', 'إدارة الأجهزة الافتراضية وOPNsense المساند وخزنة الباك أب', 'مقر المعادي', 'برايفت (الماستر)', 'المهندس عماد الشرقاوي')
-  ) AS v(name, url, purpose, providers, pwd_type, it_owner)
-  WHERE NOT EXISTS (SELECT 1 FROM public.sites s WHERE s.name = v.name);
+  -- 7) Sites (upsert by name)
+  FOR r_site IN
+    SELECT * FROM (VALUES
+      ('راوتر وفايروول TP-Link ER8411 (رئيسي)', 'https://192.168.10.1', 'إدارة خط WE ADSL + Static Public IP + Vodafone 5G + WireGuard VPN', 'مقر المعادي', 'برايفت (الماستر)', 'المهندس عماد الشرقاوي'),
+      ('سنترال Grandstream UCM6304A (604A)', 'https://192.168.30.1:8089', 'التحويلات 100-116 وWave عن بُعد (25–30 مستخدماً عبر WireGuard VLAN 30)', 'مقر المعادي', 'برايفت (الماستر)', 'المهندس عماد الشرقاوي'),
+      ('بوابة WE Cloud & F5 WAF', 'https://cloud.te.eg/portal', 'إدارة خوادم 4B السحابية وجدار F5 WAF', 'المصرية للاتصالات WE', 'برايفت (الماستر)', 'المهندس عماد الشرقاوي'),
+      ('لوحة EC للنطاقات والاستضافة', 'https://clients.ec.com.eg/clientarea.php', 'إدارة DNS وتجديد mashawer.com.eg', 'EC Egypt', 'برايفت (الماستر)', 'المهندس عماد الشرقاوي'),
+      ('لوحة Proxmox VE 8.x (Z440 #1)', 'https://192.168.10.20:8006', 'إدارة الأجهزة الافتراضية وOPNsense المساند وخزنة الباك أب', 'مقر المعادي', 'برايفت (الماستر)', 'المهندس عماد الشرقاوي')
+    ) AS v(name, url, purpose, providers, pwd_type, it_owner)
+  LOOP
+    UPDATE public.sites
+    SET url = r_site.url, purpose = r_site.purpose, providers = r_site.providers, pwd_type = r_site.pwd_type, it_owner = r_site.it_owner
+    WHERE name = r_site.name;
+    IF NOT FOUND THEN
+      INSERT INTO public.sites (name, url, purpose, providers, pwd_type, it_owner)
+      VALUES (r_site.name, r_site.url, r_site.purpose, r_site.providers, r_site.pwd_type, r_site.it_owner);
+    END IF;
+  END LOOP;
 
   -- 8) Payments
   INSERT INTO public.payments (paid_on, item, amount, method, ref)
