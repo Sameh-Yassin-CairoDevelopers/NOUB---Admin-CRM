@@ -1,18 +1,22 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Lock,
-  Mail,
   Settings2,
   CheckCircle2,
   AlertCircle,
-  UserPlus,
-  LogIn,
   KeyRound,
   FolderGit2,
+  Download,
+  Database,
+  ShieldCheck,
 } from 'lucide-react';
-import { setLocalSessionEmail } from '../lib/dataService';
 import {
-  getSupabaseClient,
+  APP_PASSCODE,
+  testDirectSupabaseConnection,
+  unlockWithPasscode,
+} from '../lib/dataService';
+import { downloadSingleStandaloneHtml } from '../lib/githubExport';
+import {
   getSupabaseConfig,
   resetSupabaseConfig,
   saveSupabaseConfig,
@@ -25,106 +29,48 @@ interface LoginViewProps {
 
 export const LoginView: React.FC<LoginViewProps> = ({ onSuccess, onOpenGitHubExport }) => {
   const initialCfg = getSupabaseConfig();
-  const [tab, setTab] = useState<'login' | 'signup'>('login');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [password, setPassword] = useState(APP_PASSCODE);
   const [error, setError] = useState<string | null>(null);
-  const [info, setInfo] = useState<string | null>(null);
   const [showConfig, setShowConfig] = useState(false);
   const [sbUrl, setSbUrl] = useState(initialCfg.url);
   const [sbKey, setSbKey] = useState(initialCfg.anonKey);
   const [cfgSaved, setCfgSaved] = useState(false);
+  const [sbState, setSbState] = useState<{
+    checked: boolean;
+    connected: boolean;
+    meshawirReady: boolean;
+  }>({ checked: false, connected: false, meshawirReady: false });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  useEffect(() => {
+    let mounted = true;
+    testDirectSupabaseConnection().then((res) => {
+      if (mounted) {
+        setSbState({
+          checked: true,
+          connected: res.connected,
+          meshawirReady: res.meshawirReady,
+        });
+      }
+    });
+    return () => {
+      mounted = false;
+    };
+  }, [cfgSaved]);
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setInfo(null);
-    const cleanEmail = email.trim() || 'demo@noub-crm.local';
-
-    setLoading(true);
-    try {
-      const sb = getSupabaseClient();
-
-      if (tab === 'signup') {
-        const { data, error: signUpErr } = await sb.auth.signUp({
-          email: cleanEmail,
-          password,
-        });
-        if (signUpErr) {
-          setError(signUpErr.message || 'تعذر إنشاء الحساب في Supabase.');
-          return;
-        }
-        if (data.session) {
-          setLocalSessionEmail(null);
-          onSuccess();
-          return;
-        }
-        setInfo(
-          'تم إنشاء الحساب وإرسال رابط التفعيل إلى بريدك الإلكتروني. افتح الإيميل لتأكيد الحساب ثم سجل الدخول، أو استخدم كلمة المرور 12345678 للدخول السريع.'
-        );
-        setTab('login');
-        return;
-      }
-
-      // Login flow: try real Supabase Auth first
-      const { error: authError } = await sb.auth.signInWithPassword({
-        email: cleanEmail,
-        password,
-      });
-
-      if (!authError) {
-        setLocalSessionEmail(null);
-        onSuccess();
-        return;
-      }
-
-      // If fixed password 12345678 is used, allow immediate preview workspace entry
-      if (password === '12345678') {
-        setLocalSessionEmail(cleanEmail);
-        onSuccess();
-        return;
-      }
-
-      setError(
-        'بيانات الدخول غير صحيحة أو الحساب غير مفعّل في Supabase. يمكنك إنشاء حساب جديد أو إدخال كلمة المرور 12345678 للمعاينة الفورية.'
-      );
-    } catch (err: any) {
-      if (password === '12345678') {
-        setLocalSessionEmail(cleanEmail);
-        onSuccess();
-        return;
-      }
-      setError(err?.message || 'تعذر الاتصال بخادم Supabase.');
-    } finally {
-      setLoading(false);
+    if (unlockWithPasscode(password)) {
+      onSuccess();
+    } else {
+      setError('كلمة المرور غير صحيحة. كلمة المرور الثابتة للدخول هي: 12345678');
     }
   };
 
-  const handleQuickDemoEntry = async () => {
-    const cleanEmail = email.trim() || 'admin@noub-crm.local';
-    setEmail(cleanEmail);
-    setPassword('12345678');
+  const handleQuickEnter = () => {
     setError(null);
-    setInfo(null);
-    setLoading(true);
-    try {
-      const sb = getSupabaseClient();
-      const { error: authError } = await sb.auth.signInWithPassword({
-        email: cleanEmail,
-        password: '12345678',
-      });
-      if (!authError) {
-        setLocalSessionEmail(null);
-        onSuccess();
-        return;
-      }
-    } catch {
-      // Fallback to local workspace preview mode
-    } finally {
-      setLoading(false);
-    }
-    setLocalSessionEmail(cleanEmail);
+    setPassword(APP_PASSCODE);
+    unlockWithPasscode(APP_PASSCODE);
     onSuccess();
   };
 
@@ -148,83 +94,66 @@ export const LoginView: React.FC<LoginViewProps> = ({ onSuccess, onOpenGitHubExp
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-md bg-white border border-slate-200 rounded-xl p-8">
         <div className="mb-5 pb-4 border-b border-slate-100">
-          <div className="flex items-center justify-between gap-4">
-            <h1 className="text-2xl font-bold text-[#1E3A5F] tracking-tight">NOUB CRM</h1>
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h1 className="text-2xl font-bold text-[#1E3A5F] tracking-tight">NOUB CRM</h1>
+              <p className="text-[11px] font-semibold text-slate-500 mt-0.5">
+                منظومة مشاوير للمنصات الرقمية ومقر المعادي
+              </p>
+            </div>
             <button
               type="button"
               onClick={onOpenGitHubExport}
               className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-700 hover:text-blue-900 underline underline-offset-4 whitespace-nowrap shrink-0 cursor-pointer"
             >
               <FolderGit2 className="w-3.5 h-3.5" />
-              <span>ملفات GitHub المصححة</span>
+              <span>ملفات GitHub و SQL</span>
             </button>
           </div>
-          <p className="mt-1.5 text-sm text-slate-600">
-            منصة متابعة الاشتراكات والدومينات ومفاتيح API ومسار تسليم التطبيقات
+          <p className="mt-2.5 text-xs text-slate-600 leading-relaxed">
+            ربط مباشر بقاعدة بيانات Supabase بدون الحاجة لبريد إلكتروني أو إنشاء حساب — أدخل كلمة المرور المشتركة فقط.
           </p>
         </div>
 
-        {/* Auth Mode Switcher */}
-        <div className="grid grid-cols-2 gap-1 p-1 bg-slate-100 rounded-lg mb-5">
-          <button
-            type="button"
-            onClick={() => {
-              setTab('login');
-              setError(null);
-            }}
-            className={`flex items-center justify-center gap-1.5 py-2 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
-              tab === 'login' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+        {/* Direct Supabase Status */}
+        <div className="mb-5 p-3 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2 min-w-0">
+            <Database className="w-4 h-4 text-[#1E3A5F] shrink-0" />
+            <div className="min-w-0">
+              <p className="font-semibold text-slate-800">اتصال Supabase المباشر</p>
+              <p className="text-[11px] text-slate-500 font-mono truncate" dir="ltr">
+                {sbUrl.replace('https://', '')}
+              </p>
+            </div>
+          </div>
+          <span
+            className={`text-[11px] font-bold shrink-0 ${
+              !sbState.checked
+                ? 'text-slate-500'
+                : sbState.connected
+                  ? 'text-emerald-700'
+                  : 'text-amber-700'
             }`}
           >
-            <LogIn className="w-3.5 h-3.5" />
-            <span>تسجيل الدخول</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setTab('signup');
-              setError(null);
-            }}
-            className={`flex items-center justify-center gap-1.5 py-2 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
-              tab === 'signup' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <UserPlus className="w-3.5 h-3.5" />
-            <span>إنشاء حساب جديد</span>
-          </button>
+            {!sbState.checked
+              ? 'جاري الفحص...'
+              : sbState.meshawirReady
+                ? 'متصل ومفعّل بالكامل'
+                : sbState.connected
+                  ? 'متصل (يُفضّل تشغيل SQL الموحد)'
+                  : 'وضع هجين فوري'}
+          </span>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="login-email" className="block text-sm font-semibold text-slate-700 mb-1.5">
-              البريد الإلكتروني
-            </label>
-            <div className="relative">
-              <Mail className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <input
-                id="login-email"
-                type="email"
-                required
-                autoComplete="email"
-                dir="ltr"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@company.com"
-                className="w-full pr-9 pl-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 text-left"
-              />
-            </div>
-          </div>
-
-          <div>
             <div className="flex items-center justify-between mb-1.5">
               <label htmlFor="login-password" className="block text-sm font-semibold text-slate-700">
-                كلمة المرور
+                كلمة مرور النظام
               </label>
-              {tab === 'login' && (
-                <span className="text-[11px] text-slate-500 font-mono" dir="ltr">
-                  12345678 للمعاينة
-                </span>
-              )}
+              <span className="text-xs text-blue-700 font-mono font-bold" dir="ltr">
+                12345678
+              </span>
             </div>
             <div className="relative">
               <Lock className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -232,13 +161,12 @@ export const LoginView: React.FC<LoginViewProps> = ({ onSuccess, onOpenGitHubExp
                 id="login-password"
                 type="password"
                 required
-                minLength={6}
-                autoComplete={tab === 'signup' ? 'new-password' : 'current-password'}
+                autoComplete="current-password"
                 dir="ltr"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full pr-9 pl-3 py-2.5 text-sm border border-slate-300 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 text-left"
+                placeholder="12345678"
+                className="w-full pr-9 pl-3 py-2.5 text-sm font-mono border border-slate-300 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 text-left"
               />
             </div>
           </div>
@@ -253,40 +181,33 @@ export const LoginView: React.FC<LoginViewProps> = ({ onSuccess, onOpenGitHubExp
             </div>
           )}
 
-          {info && (
-            <div className="flex items-start gap-2 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium">
-              <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
-              <span>{info}</span>
-            </div>
-          )}
-
           <button
             type="submit"
-            disabled={loading}
-            className="w-full py-2.5 px-4 bg-[#1E3A5F] hover:bg-[#162d4a] disabled:opacity-60 text-white text-sm font-semibold rounded-lg transition-colors cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-[#1E3A5F] hover:bg-[#162d4a] text-white text-sm font-semibold rounded-lg transition-colors cursor-pointer"
           >
-            {loading
-              ? 'جاري التنفيذ...'
-              : tab === 'signup'
-                ? 'إنشاء الحساب في Supabase'
-                : 'دخول إلى النظام'}
+            <ShieldCheck className="w-4 h-4" />
+            <span>دخول مباشر إلى لوحة التحكم</span>
           </button>
         </form>
 
-        {/* 1-click fixed password 12345678 entry */}
-        <div className="mt-4 pt-4 border-t border-slate-100 space-y-2">
+        <div className="mt-3 space-y-2">
           <button
             type="button"
-            disabled={loading}
-            onClick={handleQuickDemoEntry}
+            onClick={handleQuickEnter}
             className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-900 text-xs font-bold rounded-lg transition-colors cursor-pointer"
           >
             <KeyRound className="w-4 h-4 shrink-0" />
-            <span>دخول سريع للمعاينة (أي بريد + كلمة المرور 12345678)</span>
+            <span>دخول فوري بضغطة واحدة (12345678)</span>
           </button>
-          <p className="text-[11px] text-slate-500 text-center">
-            يفتح لوحة التحكم مباشرة بكل البيانات الأولية من ملف SQL، أو يسجل على Supabase إذا كان الحساب مفعلاً.
-          </p>
+
+          <button
+            type="button"
+            onClick={() => downloadSingleStandaloneHtml(sbUrl, sbKey)}
+            className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-900 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+          >
+            <Download className="w-4 h-4 shrink-0" />
+            <span>تحميل index.html الواحد لحل الصفحة البيضاء على GitHub</span>
+          </button>
         </div>
 
         <div className="mt-5 pt-4 border-t border-slate-100">
@@ -296,7 +217,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onSuccess, onOpenGitHubExp
             className="flex items-center gap-2 text-xs font-medium text-slate-500 hover:text-slate-800 cursor-pointer"
           >
             <Settings2 className="w-3.5 h-3.5" />
-            <span>إعدادات اتصال Supabase</span>
+            <span>تعديل إعدادات اتصال Supabase</span>
           </button>
 
           {showConfig && (
@@ -314,7 +235,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onSuccess, onOpenGitHubExp
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-600 mb-1">
-                  SUPABASE_ANON_KEY
+                  SUPABASE_PUBLISHABLE_KEY
                 </label>
                 <input
                   type="text"

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   LayoutDashboard,
   Layers,
@@ -21,14 +21,17 @@ import {
   AppWindow,
   CheckSquare,
   Users,
-  Info,
   ClipboardCheck,
   ShieldCheck,
   Archive,
+  Network,
+  Database,
 } from 'lucide-react';
 import { TABLES } from './data/tables';
-import { getLocalSessionEmail, setLocalSessionEmail } from './lib/dataService';
-import { getSupabaseClient } from './lib/supabase';
+import {
+  isPasscodeUnlocked,
+  lockWorkspace,
+} from './lib/dataService';
 import type { TableId, ViewId } from './types/crm';
 import { LoginView } from './components/LoginView';
 import { ExecutiveDashboard } from './components/ExecutiveDashboard';
@@ -38,6 +41,43 @@ import { GitHubExportModal } from './components/GitHubExportModal';
 import { JointTasksView } from './components/JointTasksView';
 import { HandoverView } from './components/HandoverView';
 import { MasterRegistryView } from './components/MasterRegistryView';
+import { InteractiveRackView } from './components/InteractiveRackView';
+import { MeshawirEcosystemView } from './components/MeshawirEcosystemView';
+
+class AppErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; message: string }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, message: '' };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, message: error?.message || 'خطأ غير متوقع في واجهة النظام' };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+          <div className="max-w-md w-full bg-white border border-red-200 rounded-xl p-6 space-y-3 text-center">
+            <h2 className="text-base font-bold text-red-700">تعذر عرض الصفحة مؤقتاً</h2>
+            <p className="text-xs text-slate-600 font-mono">{this.state.message}</p>
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-[#1E3A5F] text-white text-xs font-semibold rounded-lg cursor-pointer"
+            >
+              إعادة تحميل الصفحة
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const TABLE_ICONS: Record<TableId, React.ReactNode> = {
   telecom_lines: <Phone className="w-4 h-4 shrink-0" />,
@@ -52,71 +92,20 @@ const TABLE_ICONS: Record<TableId, React.ReactNode> = {
   team: <Users className="w-4 h-4 shrink-0" />,
 };
 
-export default function App() {
-  const [checkingAuth, setCheckingAuth] = useState(true);
-  const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [localPreview, setLocalPreview] = useState(false);
+function MainApp() {
+  const [unlocked, setUnlocked] = useState<boolean>(() => isPasscodeUnlocked());
   const [activeView, setActiveView] = useState<ViewId>('dash');
   const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [exportModalOpen, setExportModalOpen] = useState(false);
 
-  const checkSession = async () => {
-    setCheckingAuth(true);
-    try {
-      const sb = getSupabaseClient();
-      const { data } = await sb.auth.getSession();
-      if (data.session?.user?.email) {
-        setLocalSessionEmail(null);
-        setLocalPreview(false);
-        setUserEmail(data.session.user.email);
-        return;
-      }
-    } catch {
-      // Ignore and check local preview session
-    } finally {
-      setCheckingAuth(false);
-    }
-
-    const localEmail = getLocalSessionEmail();
-    if (localEmail) {
-      setLocalPreview(true);
-      setUserEmail(localEmail);
-    } else {
-      setLocalPreview(false);
-      setUserEmail(null);
-    }
+  const handleUnlockSuccess = () => {
+    setUnlocked(true);
   };
 
-  useEffect(() => {
-    checkSession();
-    try {
-      const sb = getSupabaseClient();
-      const { data: listener } = sb.auth.onAuthStateChange((_event, session) => {
-        if (session?.user?.email) {
-          setLocalSessionEmail(null);
-          setLocalPreview(false);
-          setUserEmail(session.user.email);
-        } else if (!getLocalSessionEmail()) {
-          setLocalPreview(false);
-          setUserEmail(null);
-        }
-      });
-      return () => listener.subscription.unsubscribe();
-    } catch {
-      return undefined;
-    }
-  }, []);
-
-  const handleSignOut = async () => {
-    setLocalSessionEmail(null);
-    setLocalPreview(false);
-    try {
-      const sb = getSupabaseClient();
-      await sb.auth.signOut();
-    } finally {
-      setUserEmail(null);
-    }
+  const handleLockOut = () => {
+    lockWorkspace();
+    setUnlocked(false);
   };
 
   const activeTable = useMemo(
@@ -128,7 +117,19 @@ export default function App() {
     if (activeView === 'dash') {
       return {
         title: 'ملخص المتابعة والرسوم البيانية',
-        subtitle: 'نظرة شاملة على الاستحقاقات المالية وجاهزية التطبيقات',
+        subtitle: 'ربط مباشر بـ Supabase لمتابعة الاستحقاقات المالية وجاهزية تطبيقات مشاوير (4B · Daro · WeKaLa)',
+      };
+    }
+    if (activeView === 'rack') {
+      return {
+        title: 'الراك التفاعلي وغرفة سيرفرات المعادي (Perla 27U)',
+        subtitle: 'سيسكو 3850 (48 بورت)، راوتر/فايروول TP-Link ER8411، وسنترال Grandstream 604A — بقيادة م/ عماد الشرقاوي وم/ سامح يس',
+      };
+    }
+    if (activeView === 'ecosystem') {
+      return {
+        title: 'منظومة مشاوير الشاملة (8 مشاريع + 22 جدولاً)',
+        subtitle: 'تطبيقات 4B ودارو ووكالة، الهيكل البشري (13)، المقر (10 مناطق)، 16 كاميرا، فواتير ETA، الملفات القانونية، وكاجل',
       };
     }
     if (activeView === 'app-workspace') {
@@ -140,13 +141,13 @@ export default function App() {
     if (activeView === 'joint-tasks') {
       return {
         title: 'جدول متابعة بنود العمل المشتركة (105 بنود)',
-        subtitle: 'متابعة تنفيذ م/ عماد الشرقاوي وم/ سامح ياسين وتحديث الحالات لحظياً',
+        subtitle: 'متابعة تنفيذ م/ عماد الشرقاوي وم/ سامح يس وتحديث الحالات لحظياً',
       };
     }
     if (activeView === 'handover') {
       return {
         title: 'حزمة تسليم مقر المعادي إلى م/ عماد الشرقاوي',
-        subtitle: 'البوابات الـ 14، Zoho Lite، السنترال الجراند ستريم، راك 27U، وسحابة WE',
+        subtitle: 'البوابات الـ 14، Zoho Lite، السنترال الجراند ستريم 604A، راوتر ER8411، راك 27U، وسحابة WE',
       };
     }
     if (activeView === 'master-registry') {
@@ -171,22 +172,11 @@ export default function App() {
     setActiveView('app-workspace');
   };
 
-  if (checkingAuth) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-        <div className="bg-white border border-slate-200 rounded-xl px-8 py-6 text-center space-y-2">
-          <p className="text-sm font-bold text-[#1E3A5F]">NOUB CRM</p>
-          <p className="text-xs text-slate-500">جاري التحقق من جلسة الدخول...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!userEmail) {
+  if (!unlocked) {
     return (
       <>
         <LoginView
-          onSuccess={checkSession}
+          onSuccess={handleUnlockSuccess}
           onOpenGitHubExport={() => setExportModalOpen(true)}
         />
         <GitHubExportModal
@@ -207,8 +197,9 @@ export default function App() {
     <div className="flex flex-col h-full">
       <div className="px-3 pb-4 mb-3 border-b border-white/15">
         <h2 className="text-lg font-bold text-white tracking-tight">NOUB CRM</h2>
-        <p className="text-[11px] text-slate-300 mt-1 truncate" dir="ltr">
-          {userEmail}
+        <p className="text-[11px] text-emerald-300 mt-1 flex items-center gap-1.5">
+          <Database className="w-3 h-3 shrink-0" />
+          <span>ربط مباشر مع Supabase</span>
         </p>
       </div>
 
@@ -224,6 +215,32 @@ export default function App() {
         >
           <LayoutDashboard className="w-4 h-4 shrink-0" />
           <span>الملخص والرسوم</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => navigate('rack')}
+          className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
+            activeView === 'rack'
+              ? 'bg-blue-600 text-white font-semibold'
+              : 'text-slate-200 hover:bg-white/10'
+          }`}
+        >
+          <Server className="w-4 h-4 shrink-0" />
+          <span>الراك التفاعلي 27U</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => navigate('ecosystem')}
+          className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
+            activeView === 'ecosystem'
+              ? 'bg-blue-600 text-white font-semibold'
+              : 'text-slate-200 hover:bg-white/10'
+          }`}
+        >
+          <Network className="w-4 h-4 shrink-0" />
+          <span>منظومة مشاوير الشاملة</span>
         </button>
 
         <button
@@ -316,15 +333,15 @@ export default function App() {
           className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors whitespace-nowrap cursor-pointer"
         >
           <FolderGit2 className="w-4 h-4 shrink-0" />
-          <span>ملفات GitHub Pages</span>
+          <span>ملفات GitHub و SQL</span>
         </button>
         <button
           type="button"
-          onClick={handleSignOut}
+          onClick={handleLockOut}
           className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-slate-200 hover:bg-white/10 rounded-lg transition-colors whitespace-nowrap cursor-pointer"
         >
           <LogOut className="w-4 h-4 shrink-0" />
-          <span>تسجيل الخروج</span>
+          <span>قفل الجلسة</span>
         </button>
       </div>
     </div>
@@ -341,7 +358,7 @@ export default function App() {
             onClick={() => setExportModalOpen(true)}
             className="px-2.5 py-1.5 text-xs font-semibold bg-white/15 rounded-md whitespace-nowrap cursor-pointer"
           >
-            ملفات GitHub
+            GitHub + SQL
           </button>
           <button
             type="button"
@@ -373,25 +390,7 @@ export default function App() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 max-w-[1440px]">
-        {localPreview && (
-          <div className="mb-4 px-4 py-2.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-xs flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <Info className="w-4 h-4 shrink-0 text-amber-700" />
-              <span>
-                وضع المعاينة الفورية (محلي على متصفحك) — للحفظ السحابي على Supabase، أنشئ حساباً أو سجل بحساب مفعّل.
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={handleSignOut}
-              className="font-bold underline underline-offset-4 hover:text-amber-950 whitespace-nowrap cursor-pointer"
-            >
-              تسجيل بحساب Supabase
-            </button>
-          </div>
-        )}
-
+      <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 max-w-[1480px]">
         <header className="pb-5 mb-6 border-b border-slate-200 flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="text-xl sm:text-2xl font-bold text-slate-900">{headerInfo.title}</h1>
@@ -403,13 +402,17 @@ export default function App() {
             className="hidden sm:inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 rounded-lg whitespace-nowrap shrink-0 cursor-pointer"
           >
             <FolderGit2 className="w-4 h-4 text-[#1E3A5F]" />
-            <span>تحميل حزمة GitHub الجاهزة</span>
+            <span>تحميل index.html الواحد + SQL</span>
           </button>
         </header>
 
         {activeView === 'dash' && (
           <ExecutiveDashboard onSelectApp={handleSelectAppFromDashboard} />
         )}
+
+        {activeView === 'rack' && <InteractiveRackView />}
+
+        {activeView === 'ecosystem' && <MeshawirEcosystemView />}
 
         {activeView === 'app-workspace' && (
           <AppWorkspaceView initialAppId={selectedAppId} />
@@ -429,5 +432,13 @@ export default function App() {
         onClose={() => setExportModalOpen(false)}
       />
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AppErrorBoundary>
+      <MainApp />
+    </AppErrorBoundary>
   );
 }

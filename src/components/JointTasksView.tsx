@@ -26,7 +26,7 @@ export const JointTasksView: React.FC = () => {
   const [ownerFilter, setOwnerFilter] = useState<string>('all');
   const [adding, setAdding] = useState(false);
   const [newTitle, setNewTitle] = useState('');
-  const [newOwner, setNewOwner] = useState('م/ عماد الشرقاوي + م/ سامح ياسين');
+  const [newOwner, setNewOwner] = useState('م/ عماد الشرقاوي + م/ سامح يس');
   const [newSection, setNewSection] = useState('العتاد والراك');
   const [newStatus, setNewStatus] = useState<JointTaskStatus>('جاري التنفيذ');
 
@@ -154,7 +154,7 @@ export const JointTasksView: React.FC = () => {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h2 className="text-base font-bold text-slate-900">
-              مؤشر إنجاز جدول العمل المشترك — م/ عماد الشرقاوي وم/ سامح ياسين
+              مؤشر إنجاز جدول العمل المشترك — م/ عماد الشرقاوي وم/ سامح يس
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
               يمكنك تحديث حالة أي بند مباشرة وسيتم تحديث النسب والرسوم البيانية فوراً

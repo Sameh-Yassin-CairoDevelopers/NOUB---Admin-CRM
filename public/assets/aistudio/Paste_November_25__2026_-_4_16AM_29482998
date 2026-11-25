@@ -1,0 +1,1022 @@
+مذكرة تسليم هندسية وبرمجية شاملة موجّهة إلى نموذج الذكاء الاصطناعي / المطور المساعد (AI-to-AI Master Handoff)
+توجيه مباشر للنموذج اللغوي المستقبِل لهذه المذكرة:
+أنت تتسلم الآن التوثيق النهائي والمحدّث لمنظومة شركة مشاوير للمنصات الرقمية (مقر المعراج بالمعادي) بقيادة المهندس سامح يس (CTO) والمهندس عماد الشرقاوي (المستشار التقني الأول ومدير الفرع) والمالك أبو خالد.
+المطلوب منك هو تنفيذ ثلاث مهام مترابطة بدقة واحترافية عالية:
+قراءة الجداول التلخيصية بالأسفل لاستيعاب الصورة الكاملة (بما فيها المشتريات والتركيبات الفعلية الجديدة التي تمت اليوم: سنترال Grandstream 604A، وجدار الحماية والراوتر TP-Link ER8411، وخطين أرضي الأول مشغّل عليه راوتر WE ADSL والثاني راكب على السنترال، مع تشغيل راوتر Vodafone 5G).
+فحص كود الـ SQL الكامل والضخم في نهاية هذه المذكرة ومقارنته بمشروعك وقاعدة بياناتك الحالية: لا تحذف منطقاً برمجياً سليماً لديك؛ بل استخرج منه كل ما ليس موجوداً عندك وأضفه لجداولك، وحدّث السجلات التي تغيرت بنفس أسماء الجداول والمعرفات (id)، ثم اربط واجهاتك بهذا المحتوى الغني.
+بناء صفحة "الراك التفاعلي الرسومية" (Interactive Graphic Rack Page) بنفس الاحترافية والمعمارية الموصوفة في القسم الأول أدناه.
+أولاً: المواصفات المعمارية والرسومية لبناء صفحة الـ Rack الاحترافية (Graphic Interactive Rack)
+لكي تبني صفحة الراك الرسومية التفاعلية مطابقة للتي بنيناها هنا وبنفس المستوى الهندسي، التزم بالتصميم والتفاصيل التالية:
+1. المظهر العام وأدوات التحكم العلوية (Datacenter Dark UI & Controls)
+الهوية البصرية: خلفية غرفة بيانات داكنة (slate-950) مع حواف معدنية لكابينة Perla 27U (عمق 1000 مم) وتوهج مؤشرات الحالة (LEDs خضراء/زرقاء/كهرمانية وامضة للمنافذ النشطة).
+شريط تحكم تفاعلي أعلى الصفحة (Control Toolbar):
+تكبير/تصغير وسحب حر (Zoom & Pan): من 0.7x إلى 1.8x مع إمكانية السحب بالماوس وزر Reset View لإعادة التمركز على سويتش سيسكو 3850.
+تبديل زاوية العرض (2D Flat / 3D Perspective): لعرض الواجهة الأمامية بوضوح هندسي أو بمنظور ثلاثي الأبعاد.
+أدوات المحاكاة الفيزيائية: زر فتح/غلق الباب الزجاجي الأمامي للراك (Glass Door)، زر تشغيل/إطفاء إضاءة الراك الداخلية (Rack Light)، زر إظهار مسارات الكابلات (Patch Cables Overlay)، وزر تشغيل وميض المصابيح (LED Activity).
+بحث وتصفية فورية (Search & VLAN Filter): بحث باسم الجهاز أو رقم المنفذ أو الـ IP أو اسم الموظف، مع فلاتر بألوان الـ VLAN (VLAN 10 إدارة، VLAN 15 كول سنتر، VLAN 20 كاميرات، VLAN 30 سنترال VoIP، VLAN 40 واي فاي، VLAN 50 سيرفرات، VLAN 90-92 خطوط WE و4B، VLAN 99 إدارة معزولة).
+2. التخطيط المنقسم للشاشة (Split Interactive Canvas + Live Port Inspector)
+الجانب الرئيسي (الراك الرسومي التفاعلي - من الأعلى للأسفل Top to Bottom بالترتيب الحقيقي الدقيق):
+U27 — لوحة التوزيع الأولى (Patch Panel 1 - 24 Port Cat6): منافذ PP1-01 إلى PP1-24 (مكاتب الإدارة، طابعة HP LaserJet Pro M404n على المنفذ 7، أجهزة الكول سنتر، وهواتف الـ IP).
+U26 — سويتش سيسكو المركزي (Cisco Catalyst 3850-48P PoE+): رسم واقعي لصفين من 48 منفذ جيجابت + 4 منافذ 10G SFP+ + مؤشرات الباور سبلاي المزدوج 715W — كل منفذ من 1 إلى 48 قابل للنقر (Clickable Target).
+U25 — لوحة التوزيع الثانية (Patch Panel 2 - 24 Port Cat6): منافذ الكاميرات 1–16، روابط السيرفرات، ونقاط الواي فاي.
+U24 — سيرفر ديل الرئيسي (Dell PowerEdge R640 Platinum 1U) + رف HP Z440 (Proxmox/Docker Vault): يظهر فتحات الـ 8 أقراص SAS/NVMe + منافذ LACP الأربعة + منفذ الإدارة iDRAC9.
+U23–U21 — مسافة فارغة واضحة (3U Airflow & Expansion Bay): فراغ حقيقي بعرض الراك للتهوية وعزل الحرارة بين R640 وأجهزة الصوت والمراقبة، مع إظهار قضبان الراك.
+U20 — مسجل الكاميرات (Hikvision 16-Channel 4K NVR): يظهر الـ 16 قناة وقرص WD Purple 4TB ومخرج الشاشة.
+U19 — السنترال الذكي (Grandstream UCM6304A "604A" IP PBX): جديد ومشترى ومفعّل — يظهر شاشة الـ LCD الزرقاء الأمامية + منافذ WAN وLAN وFXO 1–4 (راكب عليها الخط الأرضي الثاني) وFXS 1–2 (الاستقبال/الطوارئ).
+U18 — جدار الحماية والراوتر المركزي (TP-Link ER8411 Enterprise VPN Router & Firewall): جديد ومشترى ومفعّل — يعمل كراوتر وفايروول في نفس الوقت؛ يربط WAN1 (خط أرضي 1 - WE ADSL) وWAN2 (راوتر Vodafone 5G) وWAN3 (جاهز لفايبر WE L3VPN) + ترنك LAN إلى سيسكو 3850، مع توثيق OPNsense كفايروول افتراضي مساند على HP Z440.
+القاعدة السفلية: وحدة توزيع الطاقة PDU + UPS + مراوح التبريد السقفية.
+الجانب الثانوي (لوحة المفتش التفصيلي والتعديل الفوري Inspector & Extensibility Drawer):
+عند الضغط على أي جهاز أو أي منفذ (والافتراضي يكون محدداً مثلاً منفذ Gi1/0/7 لطابعة HP LaserJet M404n بمكتب 5 أو منفذ TP-Link ER8411 أو Grandstream 604A) تظهر بطاقة كاملة تحتوي على:
+اسم الجهاز، الموديل، عنوان IP، عنوان MAC، حالة الاتصال، استهلاك الكهرباء PoE Watts، السرعة، الـ VLAN، التتبع الفيزيائي إلى الـ Patch Panel ورقم المخرج بالغرفة (Room Drop)، وزر تعديل بيانات المنفذ (Edit Port) وزر إضافة جهاز جديد (Add Device) بحفظ محلي/سحابي حتى تبقى الصفحة قابلة للتوسع دائماً (Data-Driven).
+ثانياً: الملخص المكثف لمنظومة مشاوير (جداول مركزة بدلاً من التكرار النصي)
+1. جدول التطبيقات والأنظمة البرمجية (مع التركيز الكامل على 4B ودارو Daro ووكالة)
+المشروع / الكود	الحالة ونسبة فيجما	المعمارية التقنية الفعلية (Tech Stack & Integrations)	التفاصيل التشغيلية والفجوات المطلوب إغلاقها
+تطبيق فور بي للركاب والسائقين (4B / GoRide)	في الإنتاج والاختبار الميداني
+فيجما: 95%
+APK: v1.4.2-beta (34.8 MB) وv2.4.1-rc	• Backend: Node.js 22 LTS + NestJS (ترقية 10→11) + Prisma ORM (22 migration) + Socket.IO (Redis Adapter) + 21 BullMQ queues.
+• Admin Web: Next.js 14+ SSR على بورت 3001 (admin.4b.com.eg).
+• DB & Cache: PostgreSQL 16 + PostGIS 3.4 + Redis 7 (noeviction).
+• Storage & KYC: Cloudinary (روابط موقعة SHA-256 HMAC) + CompreFace Docker محلياً على خوادم WE في مصر (امتثالاً لقانون 151/2018).
+• OTP & Pay: BroadNet A2P (mashawer/GoRide) + adapter احتياطي Twilio/WhatsApp + فوري Fawry (تحصيل + صرف أرباح الكباتن عبر Webhook /api/v1/webhooks/fawry) + خرائط Google Maps.	• دورة الرحلة والمزايدة: التحقق بالهاتف (+20 ومهلة إعادة إرسال 60 ثانية)، رادار الخريطة (سيارات/سكوتر/VIP)، مزايدة بانتهاء عرض 15 ثانية إذا انقطع إنترنت الكابتن، وحالات الرحلة الـ 6 تُدار من السيرفر لمنع التلاعب.
+• تمييز حرج عن وكالة: 4B لا يستخدم MongoDB ولا Agora ولا OpenAI ولا Paymob (تلك خاصة بـ WiKaLa).
+• فجوات ما قبل الإطلاق الـ 5: (1) إصلاح مصادقة OAuth2 في إشعارات FCM v1، (2) تحويل خريطة لوحة الأدمن (~815 سطر) من Leaflet/OSM إلى Google Maps JS API، (3) تفعيل معالجات طوابير BullMQ الـ 20 المتبقية، (4) ترقية NestJS لحل ثغرات multer/exceljs، (5) نشر CompreFace محلياً وربط LTRA وتثبيت اتجاه أرقام الهواتف واللوحات LTR في الواجهات العربية.
+تطبيق دارو السوبر آب (Daro Logistics)	قيد التطوير
+فيجما: 70%
+النطاق: daro.eg	• Stack: PostgreSQL / Supabase + Redis + Google ML Kit Barcode Scanner + Twilio SMS + Google Maps API + محفظة COD.
+• الجداول الأساسية: shipments, waybills, cargo_hubs, truck_dispatches, tracking_logs, warehouses, manifests.	• المسارات الثلاثة: (1) الطرود السريعة بنفس اليوم داخل المدينة، (2) الشحن الثقيل والتجاري بين المحافظات، (3) توصيل طلبات المتاجر الإلكترونية.
+• المزايا الجوهرية: بوليصة رقمية بباركود فريد (Code128 / QR) بـ 3 نقاط مسح (استلام، فرز، تسليم نهائي بتوقيع أو رمز)، محفظة تحصيل عند الاستلام (COD) لتوريد أموال التجار، وحسم اختيار المسح بكاميرا الهاتف مجاناً عبر Google ML Kit مقابل شراء أجهزة Handheld.
+• توسع مستقبلي: دارو لندن (Daro London) للتوسع في المملكة المتحدة وأوروبا.
+تطبيق ومنصة وكالة (WeKaLa)	قيد الاختبار والاعتماد
+فيجما: 80%
+APK: v1.2.0 (28.7 MB)	• Stack: Flutter Mobile + Node.js + MongoDB/PostgreSQL + Redis + Agora (VoIP) + Paymob/Stripe + Google Cloud Vision + Twilio.
+• الأصول: تم تدقيق لوحة الأدمن واستلام APK، والمطلوب حسم استلام سورس Flutter الكامل ومفاتيح التوقيع Keystore من المطور.	• إدارة المكاتب الفرعية والوكلاء المحليين بالمحافظات، رفع السجل التجاري وهوية مدير الفرع، ربط الكباتن بكود وكالة فريد لتقاسم العمولات، وكشف حساب/محفظة أسبوعي للوكيل، وتوثيق نطاق wikala.com.eg.
+غرفة عمليات 4B (4B-OPS-NOC) & مقر المعادي	في الإنتاج
+راك 27U + المعراج	• تشغيل غرفة العمليات المركزية بالمعراج المعادي + 3 خوادم WE + TP-Link ER8411 + Cisco 3850 + Dell R640 + 2x HP Z440 + Grandstream 604A + 16 كاميرا Hikvision 5MP.	• إدارة أسطول 4B، متابعة خطوط الفايبر والربط الحكومي مع جهاز تنظيم النقل البري LTRA، وخزنة النسخ الاحتياطي الليلي 3:00 ص محلياً.
+مشروعات مساندة ومستقبلية	نشط / مقترح / مؤجل	• مشروع قيمة تك (ValueTech): خطة الـ 7 أسابيع (M1–M5)، 20 مهمة مفتوحة، ومراجعة قانونية.
+• مسابقة كاجل (Kaggle $100k): The White Lion + UCP-LLM (25 قسماً) + Eve v1.1 + Gemma 4 LoRA/Unsloth (موعد 17 أكتوبر).	• مطعم المشويات بالعجوزة: إشراف أبو خالد وأ/ هاني مع م/ علي (POS + كاميرات 14 كاميرا).
+• الشركة التابعة لأبو خالد: مقترح 10 أهداف (4 مهندسين + 2 استشاريين) خارج القاهرة.
+• أرشيف نوب السابق (مؤجل/مفصول): نوب الأساسي، نوب سبورتس، أكاديمي برو، لعبة KV62، PayCore، وبث MIST الذي أعيد توجيه مفهومه لغرفة عمليات 4B.
+2. جدول القيادة وفريق العمل والشركاء (مع تثبيت الاسم الصحيح سامح يس والقاعدة الذهبية)
+الاسم الصحيح	الدور والمسؤولية الدقيقة	نطاق العمل والتقارير
+أبو خالد	المالك والمستثمر الرئيسي للشركة كلها	القرارات الاستراتيجية، الميزانيات، الشركة التابعة، ومتابعة مطعم العجوزة.
+المهندس عماد الشرقاوي	المستشار التقني الأول ومدير فرع المعادي (استلام كامل الإدارة)	تأسيس المقر، الشبكة، السيرفرات، WE، LTRA، والربط الحكومي (يُذكر دائماً قبل م/ سامح يس عند اجتماعهما).
+المهندس سامح يس	رئيس قطاع التكنولوجيا (CTO) وقائد المنظومة البرمجية والذكاء الاصطناعي	مراجعة الأكواد، التطبيقات (4B/دارو/وكالة)، قيمة تك، سوبابيز، ومسار كاجل/الأسد الأبيض.
+الأستاذ هاني	المدير المالي (CFO) والمسؤول الحصري لمطعم العجوزة	الفواتير الضريبية ETA، فيزا الشركة، عقود فوري، تسويات الكباتن، وسيستم وكاميرات مطعم العجوزة.
+الأستاذ محمد مصطفى	المستشار القانوني والمحامي العام	ملفات قيمة تك، LTRA، ITIDA، الشهر العقاري، عقود الموظفين، والخطوط الأرضية/المحمولة.
+م/ موفق و م/ عمرو	قادة عمليات تطبيق 4B (خبرة +10 سنوات أوبر/كريم)	إدارة الكباتن، التسعير والمزايدة، الحوافز، النزاعات، الكول سنتر، ووكالات الدعاية والريلز.
+م/ أحمد عبيد	مهندس IT ومساعد تقني معتمد (The Assist - خبرة +5 سنوات)	الصيانة اليومية للأجهزة والشبكة والموظفين بمقر المعادي تحت إشراف القيادة الهندسية.
+حاتم الفني	فني تمديدات شبكات ميداني (بالأجرة المقطوعة/اليومية)	تمديدات السقف المعلق Cat6، تأريج الباتش بانل 48 بورت، والترانكات.
+أ/ سارة حسن	مسؤولة الموارد البشرية (HR)	جهاز البصمة ZKTeco، عقود الموظفين وعهدة الأجهزة (تم إلغاء إيميل hr@ توفيراً للتكلفة).
+فريق المقر والعمليات	5 موظفي كول سنتر + 1 محلل بيانات + م/ علي (QA مكتب 7) + م/ عناد (جدوى) + أ/ عادل فاروق + أ/ أحمد جمال (GPS) + مهندسين تحت التوظيف (SWE/Sec)	تشغيل غرفة عمليات القاعة الكبرى بالمعادي واختبار الجودة وتقارير الخرائط الحرارية.
+الشركاء والمزودون	WE: م/ أحمد محرم وم/ أحمد غريب • EC: م/ محمد الحلو (01551553434) • الأصدقاء CCTV/POS: م/ علي • قيمة تك: م/ حازم	السحابة والفايبر، النطاقات وإيميلات Zoho، كاميرات المعادي والعجوزة، وتطوير التطبيقات.
+3. جدول العتاد والبنية التحتية الفعلية بمقر المعراج بالمعادي (شاملاً المشتريات الجديدة المفعلة)
+الأصل / الجهاز	المواصفات والوضع الفعلي الحالي	مكانه / عنوانه / تفاصيل الربط
+TP-Link ER8411 Enterprise Router & Firewall	[مُشترى ومُشغّل فعلياً] راوتر وجدار حماية في آن واحد؛ يدمج خطوط الإنترنت ويدير التوجيه والـ VPN والـ VLANs.	راك Perla 27U (U18) — WAN1: خط أرضي 1 (WE ADSL) | WAN2: راوتر Vodafone 5G | LAN Trunk: سويتش سيسكو 3850.
+Grandstream UCM6304A ("604A") IP PBX	[مُشترى وراكب ومُشغّل فعلياً] سنترال المقر الذكي بشاشة LCD + عِدد هاتفية مكتبية Grandstream GRP2614 + تحويلات 100–116.	راك Perla 27U (U19) — موصل على سيسكو Gi1/0/13 (VLAN 30) + الخط الأرضي الثاني راكب مباشرة على منفذ FXO.
+خطوط الإنترنت والاتصالات بالمقر	1) خط أرضي 1: عليه إنترنت WE ADSL مغذي لـ ER8411.
+2) خط أرضي 2: راكب على سنترال Grandstream 604A.
+3) Vodafone 5G: شغال فعلياً كخط إنترنت سريع/مدمج على ER8411 (+ شريحة Orange 4G طوارئ).
+4) فايبر WE L3VPN 24Mbps: جاري التنفيذ (أمر شراء 6078927 - 4 إلى 6 أسابيع).	سنترال المعادي 1 ↔ غرفة السيرفرات المصفحة (5.74م × 1.96م).
+Cisco Catalyst 3850-48P PoE+ (715W Dual PSU)	[مُشترى ومُثبت] 48 بورت جيجابت PoE+ مع 4 منافذ 10G SFP+ وإدارة VLANs كاملة (10, 15, 20, 30, 40, 50, 90-92, 99).	راك Perla 27U (U26) — محاط بـ Patch Panel 1 (U27) وPatch Panel 2 (U25).
+Dell PowerEdge R640 Platinum + iDRAC9	[مُشترى ومُثبت] معالجين Xeon Platinum 8160 (48 نواة/96 مسار) + 64GB ECC + أقراص SAS/SSD + إدارة ريموت iDRAC9.	راك Perla 27U (U24) — ربط LACP 4 منافذ (Gi1/0/25..28) + iDRAC (Gi1/0/29).
+محطتا عمل HP Workstation Z440 (2x)	[مُشتريتان] معالج Xeon E5-2697 v4 (18 نواة/36 مسار): الأولى (Proxmox VE 8.x + حاويات Docker/OPNsense مساند + خزنة نسخ ليلي)، الثانية بمكتب 5 بـ 3 شاشات HP 22" بكاميرا للمراقبة والتطوير.	الأولى في الراك (رف 1U) + الثانية في مكتب التقنية (غرفة 5) + لابتوب م/ سامح يس (HP ZBook Firefly 14 i7).
+كاميرات المراقبة Hikvision (16x 5MP) + NVR 4K	[معتمدة وقيد الاستكمال] مسجل 16 قناة + هارد 4TB WD Purple + 4 كاميرات صوتية (استقبال/سيرفرات/إدارة/عمليات) + 12 دوم/بوليت.	راك U20 (VLAN 20) — توريد شركة الأصدقاء (م/ علي) بقيمة عرض 55,050 ج.م.
+أجهزة الموظفين والملحقات بالمعادي	3x Dell OptiPlex Core i5 الجيل العاشر + 3 شاشات HP 22" + طابعة HP LaserJet M404n + بصمة ZKTeco + UniFi AP + كابينة Perla 27U + سلم 6 درجات + مخطط إضافة 5 أجهزة (ليصبح 8) ثم 17 بالقاعة الكبرى + مطلوب شراء UPS 1500VA وتكييف 24/7 للسيرفرات.	المخطط المعماري: القاعة الكبرى (9.60×12.28م)، الغرف 1–7، الاستقبال، دورتي المياه، غرفة السيرفرات المصفحة.
+4. جدول الفواتير الضريبية (ETA) وعقود المصرية للاتصالات وأوامر الشراء
+المورد / الجهة	المرجع / الرقم الضريبي ETA أو رقم الطلب	القيمة الإجمالية (ج.م)	التاريخ والحالة
+QTS Servers	ETA 7ZYZDKGHRVSDN70R4SP81F3M10 / #1169	96,295.80	26/09/2026 — مدفوعة (R640 بـ 54,000 + 2x Z440 بـ 30,470 + ضريبة 11,825.80)
+QTS (Cisco 3850)	ETA K1G9T4WV39B521M0EYV8EM3M10 / #1172	11,970.00	28/09/2026 — مدفوعة (سويتش سيسكو 48 PoE+ بباور مزدوج + الضريبة)
+تكنو ستورز الدقي	ETA 2YMG3N8EF4WVMEB3V67G7PTK10 / #1660751017094	39,901.14	09/06/2026 — مدفوعة (3x Dell i5 + 3x شاشات HP 22" بكاميرا + ملحقات)
+رد لاين البستان	ETA 6T3HM2FA86TEDZEBQHYPFWMK10 / #15947	18,550.00	29/03/2026 — مدفوعة (راك Perla 27U + I-Pook PK65H + تأريج وأدوات)
+المنشاوي البستان	إذن صرف نقدي مؤقت #001096	8,510.00	28/09/2026 — مدفوعة نقداً (مطلوب تحويلها لفاتورة ضريبية ومراجعة فرق البنود)
+فودافون صقر قريش	فاتورة #748994	3,326.46	28/09/2026 — مدفوعة (راوتر H153-381 + شريحة + باقة 520)
+طيبة رنين الفسطاط	ETA 34GAMWHCFDFNTGX5QWDGJ8PK10 / #40-0217871	2,951.00	26/03/2026 — مدفوعة (سلم 6 درجات + 4 كراسي راتان + طاولة)
+المصرية EC (استضافة ودومين)	#1331 (Host1) و #1325 (mashawer.com.eg)	3,762.00	أغسطس 2026 — مدفوعة (2,508 + 1,254) تجديد حتى أغسطس 2027
+الأصدقاء (م/ علي)	عرض أسعار كاميرات المعادي	55,050.00	24/09/2026 — معتمد ومشروط بحسم الترقية لـ 5MP/16 كاميرا
+المصرية للاتصالات WE (فايبر L3VPN)	أمر شراء order#6078927 (360 ألف/سنة)	360,000.00 / سنة	29/09/2026 — (90,000/ربع سنة): خط 24Mbps للمقر + 6 خطوط 4Mbps للمحافظات
+المصرية للاتصالات WE (سحابة 4B + WAF)	أمر شراء order#6078933 (807,496/سنة)	807,496.00 / سنة	(201,874/ربع سنة): 3 VMs + 20Mbps + F5 WAF + 7 SSL VPN + باك أب 30 يوماً
+5. جدول المواقع والبريد الإلكتروني والملفات الحساسة (للتكامل والـ Handover)
+الخدمة / البوابة	الرابط / المعرّف الرسمي	ملاحظات حاسمة للنقل
+بريد مشاوير الرسمي (Zoho Lite)	admin@, support@, info@, operation@, finance@mashweer.com.eg	5 حسابات مجانية مفعلة فقط عبر EC — تم إلغاء hr@mashweer.com.eg رسمياً لتفادي الرسوم.
+لوحة EC و cPanel	clients.ec.com.eg/clientarea.php | cpanel.mashawer.com.eg:2083	mashawer_admin — مسجل باسم النطاق mashawer.com.eg.
+سحابة WE وبوابة الـ SSL VPN	cloud.te.eg/portal (mashweer_telecom_admin)	7 حسابات SSL VPN + بورتال السيرفرات + ربط LTRA الإلزامي.
+Supabase & GitHub	mashweer-db.supabase.co | github.com/mashweer	مشروع مشاوير مفصول عن أرشيف نوب القديم، مع حل أزمة الشاشة البيضاء بتوفير نسخة ملف HTML واحد مستقل.
+فوري + Google Maps + Cloudinary + BroadNet + Twilio	api.fawry.com | console.cloud.google.com | mashweer-cloud | broadnetme.com	4B يستخدم BroadNet/Twilio وFawry وCloudinary وCompreFace؛ بينما WiKaLa يستخدم Twilio وPaymob/Agora.
+ثالثاً: كود الـ SQL الكامل والضخم الشامل للمنظومة (PostgreSQL / Supabase Seed)
+تعليمات التنفيذ للنموذج المستقبِل:
+هذا السكربت مكتوب بصيغة آمنة لإعادة التشغيل (CREATE TABLE IF NOT EXISTS و ON CONFLICT DO UPDATE / DO NOTHING).
+قارنه بقاعدة البيانات الموجودة لديك: ما لا تملكه أضفه فوراً، وما لديك قم بتحديثه ليطابق الواقع الجديد (خصوصاً: اسم م/ سامح يس، وأولوية ذكر م/ عماد الشرقاوي قبله عند الجمع، إضافة TP-Link ER8411 وGrandstream 604A وWE ADSL + Landline 2 + Vodafone 5G، وبيانات دارو Daro وفور بي 4B الكاملة، والفواتير الـ 12 والمهام الحية).
+SQL
+-- ==============================================================================
+-- MESHAWIR DIGITAL PLATFORMS - MASTER COMPREHENSIVE DATABASE SCHEMA & FULL SEED
+-- Includes: 4B, Daro, WeKaLa, Maadi HQ, TP-Link ER8411, Grandstream 604A,
+-- WE ADSL + Landline 2 + Vodafone 5G, WE Cloud & L3VPN POs, ETA Invoices,
+-- Team Profiles (Eng. Emad El Sharkawy & Eng. Sameh Yassin "سامح يس"), Tasks & Inquiries
+-- Safe Re-runnable Idempotent SQL for Diffing & Merging into Target Systems
+-- ==============================================================================
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+-- ==============================================================================
+-- PART 1: CORE SCHEMA TABLES (بنفس المسميات المعتمدة)
+-- ==============================================================================
+
+CREATE TABLE IF NOT EXISTS public.meshawir_enterprises (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    legal_name TEXT NOT NULL,
+    commercial_register TEXT,
+    tax_number TEXT,
+    duns_number_status TEXT DEFAULT 'قيد الاستخراج والتحديث (أكتوبر)',
+    headquarters_address TEXT,
+    city TEXT DEFAULT 'القاهرة',
+    country TEXT DEFAULT 'مصر',
+    established_date DATE,
+    ceo_name TEXT,
+    branch_manager_name TEXT DEFAULT 'المهندس عماد الشرقاوي',
+    cto_name TEXT DEFAULT 'المهندس سامح يس',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.projects (
+    id TEXT PRIMARY KEY,
+    enterprise_id TEXT REFERENCES public.meshawir_enterprises(id) ON DELETE SET NULL,
+    name TEXT NOT NULL,
+    code TEXT NOT NULL UNIQUE,
+    category TEXT NOT NULL DEFAULT 'مشاوير',
+    status TEXT NOT NULL DEFAULT 'نشط',
+    figma_completion_pct INT DEFAULT 0,
+    description TEXT,
+    repo_url TEXT,
+    figma_url TEXT,
+    live_url TEXT,
+    apk_files JSONB DEFAULT '[]'::jsonb,
+    drive_assets JSONB DEFAULT '[]'::jsonb,
+    reference_chats JSONB DEFAULT '[]'::jsonb,
+    context_hints JSONB DEFAULT '[]'::jsonb,
+    db_info JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.meshawir_project_milestones (
+    id TEXT PRIMARY KEY,
+    project_id TEXT REFERENCES public.projects(id) ON DELETE CASCADE,
+    phase_code TEXT,
+    title TEXT NOT NULL,
+    target_date DATE,
+    completion_percentage INT DEFAULT 0,
+    status TEXT DEFAULT 'قيد التنفيذ',
+    deliverables_summary TEXT,
+    sign_off_by TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.meshawir_app_releases (
+    id TEXT PRIMARY KEY,
+    project_id TEXT REFERENCES public.projects(id) ON DELETE CASCADE,
+    app_name TEXT NOT NULL,
+    package_id TEXT,
+    target_role TEXT NOT NULL,
+    version_name TEXT NOT NULL,
+    build_number INT NOT NULL,
+    file_name TEXT NOT NULL,
+    file_size_mb NUMERIC(6,2),
+    release_notes TEXT,
+    status TEXT DEFAULT 'جاهز للاختبار',
+    released_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.meshawir_team_profiles (
+    id TEXT PRIMARY KEY,
+    full_name TEXT NOT NULL,
+    short_name TEXT NOT NULL,
+    title TEXT NOT NULL,
+    category TEXT NOT NULL,
+    efficiency_rate INT DEFAULT 95,
+    email TEXT,
+    phone TEXT,
+    role_description TEXT,
+    primary_strengths JSONB DEFAULT '[]'::jsonb,
+    direct_responsibilities JSONB DEFAULT '[]'::jsonb,
+    readiness_status TEXT DEFAULT 'جاهز وحاضر',
+    priority_order INT DEFAULT 1,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.service_providers (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    category TEXT NOT NULL,
+    portal_url TEXT,
+    username TEXT,
+    account_manager TEXT,
+    contact_phone TEXT,
+    contact_email TEXT,
+    status TEXT NOT NULL DEFAULT 'نشط',
+    notes TEXT,
+    cost_or_plan TEXT,
+    official_badge TEXT,
+    active_services JSONB DEFAULT '[]'::jsonb,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.contracts (
+    id TEXT PRIMARY KEY,
+    provider_id TEXT REFERENCES public.service_providers(id) ON DELETE SET NULL,
+    title TEXT NOT NULL,
+    provider_name TEXT NOT NULL,
+    project_name TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'قيد التنفيذ',
+    total_value TEXT,
+    total_amount_egp NUMERIC(12,2),
+    currency TEXT DEFAULT 'EGP',
+    payment_terms TEXT,
+    deliverables JSONB DEFAULT '[]'::jsonb,
+    start_date DATE,
+    end_date DATE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.meshawir_quotations (
+    id TEXT PRIMARY KEY,
+    provider_id TEXT REFERENCES public.service_providers(id) ON DELETE SET NULL,
+    quote_number TEXT NOT NULL,
+    title TEXT NOT NULL,
+    submission_date DATE,
+    valid_until DATE,
+    subtotal_egp NUMERIC(12,2),
+    vat_egp NUMERIC(12,2),
+    total_egp NUMERIC(12,2),
+    is_tax_invoice BOOLEAN DEFAULT FALSE,
+    eta_uuid TEXT,
+    status TEXT DEFAULT 'معتمد ومسدد',
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.meshawir_quotation_items (
+    id TEXT PRIMARY KEY,
+    quotation_id TEXT REFERENCES public.meshawir_quotations(id) ON DELETE CASCADE,
+    item_index INT NOT NULL,
+    item_description TEXT NOT NULL,
+    specs TEXT,
+    quantity INT DEFAULT 1,
+    unit_price_egp NUMERIC(12,2),
+    total_price_egp NUMERIC(12,2),
+    installation_location TEXT
+);
+
+CREATE TABLE IF NOT EXISTS public.meshawir_subscriptions (
+    id TEXT PRIMARY KEY,
+    service_name TEXT NOT NULL,
+    category TEXT NOT NULL,
+    provider_id TEXT REFERENCES public.service_providers(id) ON DELETE SET NULL,
+    provider_name TEXT NOT NULL,
+    cost_amount_egp NUMERIC(10,2),
+    billing_cycle TEXT DEFAULT 'سنوي',
+    next_renewal_date DATE,
+    status TEXT DEFAULT 'active',
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.meshawir_server_racks (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    total_units INT DEFAULT 27,
+    depth_mm INT DEFAULT 1000,
+    width_inches INT DEFAULT 19,
+    location TEXT DEFAULT 'مقر المعراج بالمعادي - غرفة IT المصفحة (5.74م × 1.96م)',
+    cooling_type TEXT DEFAULT '4x مراوح سقفية + تكييف مخصص 24/7 قيد التثبيت',
+    power_backup TEXT DEFAULT 'PDU 8 منافذ + مطلوب UPS 1500VA',
+    lock_status TEXT DEFAULT 'باب زجاجي مؤمّن بمفتاح لدى م/ عماد الشرقاوي وم/ سامح يس',
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.meshawir_rack_devices (
+    id TEXT PRIMARY KEY,
+    rack_id TEXT REFERENCES public.meshawir_server_racks(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    arabic_name TEXT NOT NULL,
+    model TEXT NOT NULL,
+    manufacturer TEXT NOT NULL,
+    u_position_start INT NOT NULL,
+    u_height INT NOT NULL,
+    device_category TEXT NOT NULL,
+    serial_number TEXT,
+    ip_management TEXT,
+    mac_address TEXT,
+    power_watts NUMERIC(6,2),
+    operating_temp_c NUMERIC(4,1) DEFAULT 22.0,
+    status TEXT DEFAULT 'online',
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.meshawir_rack_ports (
+    id TEXT PRIMARY KEY,
+    device_id TEXT REFERENCES public.meshawir_rack_devices(id) ON DELETE CASCADE,
+    port_number INT NOT NULL,
+    label TEXT NOT NULL,
+    status TEXT DEFAULT 'active',
+    connected_device TEXT,
+    device_type TEXT,
+    user_endpoint TEXT,
+    ip_address TEXT,
+    mac_address TEXT,
+    vlan_name TEXT,
+    vlan_id INT,
+    speed_duplex TEXT DEFAULT '1000 Mbps Full Duplex',
+    poe_watts NUMERIC(5,2) DEFAULT 0,
+    cable_color TEXT DEFAULT 'blue',
+    patch_panel_cross_port INT,
+    notes TEXT
+);
+
+CREATE TABLE IF NOT EXISTS public.meshawir_4b_leased_lines (
+    id TEXT PRIMARY KEY,
+    circuit_reference TEXT NOT NULL UNIQUE,
+    provider_name TEXT NOT NULL,
+    service_type TEXT NOT NULL,
+    bandwidth_mbps INT NOT NULL,
+    source_endpoint TEXT NOT NULL,
+    destination_endpoint TEXT NOT NULL,
+    primary_gateway_ip TEXT,
+    backup_gateway_ip TEXT,
+    monthly_cost_egp NUMERIC(10,2),
+    contract_ref TEXT,
+    status TEXT DEFAULT 'active',
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.meshawir_network_nodes (
+    id TEXT PRIMARY KEY,
+    node_name TEXT NOT NULL,
+    category TEXT NOT NULL,
+    ip_address TEXT NOT NULL,
+    mac_address TEXT,
+    port_number INT,
+    rack_unit TEXT,
+    location TEXT,
+    status TEXT DEFAULT 'online',
+    latency_ms NUMERIC(5,2) DEFAULT 1.5,
+    expected_sla_ms INT DEFAULT 10,
+    description TEXT,
+    responsible_engineers TEXT,
+    last_ping_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.meshawir_cctv_cameras (
+    id TEXT PRIMARY KEY,
+    camera_number INT NOT NULL,
+    model TEXT DEFAULT 'Hikvision 5MP IP Camera',
+    resolution TEXT DEFAULT '5 Megapixel',
+    location_in_office TEXT NOT NULL,
+    nvr_channel INT NOT NULL,
+    ip_address TEXT,
+    switch_port INT,
+    has_audio_mic BOOLEAN DEFAULT FALSE,
+    status TEXT DEFAULT 'online',
+    contractor_name TEXT DEFAULT 'شركة الأصدقاء للأنظمة الأمنية (بشمهندس علي)'
+);
+
+CREATE TABLE IF NOT EXISTS public.meshawir_voip_extensions (
+    id TEXT PRIMARY KEY,
+    extension_number TEXT NOT NULL UNIQUE,
+    user_name TEXT NOT NULL,
+    department TEXT NOT NULL,
+    device_model TEXT DEFAULT 'Grandstream GRP2614 HD PoE',
+    ip_address TEXT,
+    switch_port INT,
+    vlan_id INT DEFAULT 30,
+    status TEXT DEFAULT 'active'
+);
+
+CREATE TABLE IF NOT EXISTS public.meshawir_it_tickets (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    category TEXT NOT NULL,
+    severity TEXT DEFAULT 'medium',
+    status TEXT DEFAULT 'open',
+    affected_node_id TEXT,
+    description TEXT,
+    reported_by TEXT,
+    assigned_to TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.mashweer_emails (
+    id TEXT PRIMARY KEY,
+    address TEXT NOT NULL UNIQUE,
+    role_title TEXT NOT NULL,
+    department TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'نشط ومعتمد',
+    quota TEXT DEFAULT '5 GB',
+    assigned_to TEXT,
+    webmail_url TEXT DEFAULT 'https://mail.zoho.com',
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.meshawir_domains (
+    id TEXT PRIMARY KEY,
+    domain_name TEXT NOT NULL UNIQUE,
+    registrar TEXT NOT NULL,
+    expiry_date DATE,
+    associated_project_id TEXT REFERENCES public.projects(id) ON DELETE SET NULL,
+    status TEXT DEFAULT 'active',
+    notes TEXT
+);
+
+CREATE TABLE IF NOT EXISTS public.project_tasks (
+    id TEXT PRIMARY KEY,
+    task_number INT,
+    project_id TEXT,
+    category TEXT NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    priority TEXT NOT NULL DEFAULT 'متوسطة',
+    status TEXT NOT NULL DEFAULT 'قيد التنفيذ',
+    risk_level TEXT DEFAULT 'safe',
+    due_date TEXT,
+    assigned_to TEXT,
+    is_emad_key_task BOOLEAN DEFAULT FALSE,
+    is_sameh_software_task BOOLEAN DEFAULT FALSE,
+    is_mowaffaq_ops_task BOOLEAN DEFAULT FALSE,
+    is_lawyer_task BOOLEAN DEFAULT FALSE,
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.meshawir_facility_zones (
+    id TEXT PRIMARY KEY,
+    zone_name TEXT NOT NULL,
+    allocated_purpose TEXT NOT NULL,
+    dimensions_text TEXT,
+    capacity_people INT,
+    workstation_ports_count INT,
+    cctv_cameras_count INT,
+    assigned_staff TEXT,
+    notes TEXT
+);
+
+CREATE TABLE IF NOT EXISTS public.hardware_inventory (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    role TEXT NOT NULL,
+    specs TEXT,
+    location TEXT,
+    invoice_ref TEXT,
+    vendor TEXT,
+    status TEXT DEFAULT 'مورد ومعتمد',
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.meshawir_legal_dossiers (
+    id TEXT PRIMARY KEY,
+    dossier_title TEXT NOT NULL,
+    authority_name TEXT NOT NULL,
+    case_reference TEXT,
+    lead_counsel TEXT DEFAULT 'أ/ محمد مصطفى (المحامي)',
+    status TEXT DEFAULT 'قيد المتابعة',
+    action_required TEXT
+);
+
+CREATE TABLE IF NOT EXISTS public.system_inquiries (
+    id TEXT PRIMARY KEY,
+    question TEXT NOT NULL,
+    context TEXT,
+    category TEXT NOT NULL,
+    urgency TEXT NOT NULL DEFAULT 'medium',
+    options JSONB DEFAULT '[]'::jsonb,
+    answered BOOLEAN DEFAULT FALSE,
+    answer TEXT
+);
+
+CREATE TABLE IF NOT EXISTS public.meshawir_subsidiary_proposals (
+    id TEXT PRIMARY KEY,
+    proposal_title TEXT NOT NULL,
+    recipient_investor TEXT DEFAULT 'أ/ أبو خالد',
+    proposed_by TEXT DEFAULT 'المهندس سامح يس',
+    strategic_objectives JSONB DEFAULT '[]'::jsonb,
+    corporate_structure JSONB DEFAULT '[]'::jsonb,
+    status TEXT DEFAULT 'معروض للنقاش'
+);
+
+CREATE TABLE IF NOT EXISTS public.meshawir_general_ledger (
+    id TEXT PRIMARY KEY,
+    item_number INT NOT NULL,
+    category TEXT NOT NULL,
+    title TEXT NOT NULL,
+    detail TEXT,
+    amount_egp NUMERIC(12,2) DEFAULT 0,
+    invoice_ref TEXT,
+    status TEXT DEFAULT 'معتمد',
+    date_recorded DATE
+);
+
+CREATE TABLE IF NOT EXISTS public.meshawir_kaggle_research (
+    id TEXT PRIMARY KEY,
+    paper_title TEXT NOT NULL,
+    track_name TEXT DEFAULT 'Kaggle Paper Track ($100,000)',
+    deadline_date DATE DEFAULT '2026-10-17',
+    primary_author TEXT DEFAULT 'المهندس سامح يس',
+    abstract_text TEXT,
+    framework_model TEXT DEFAULT 'UCP-LLM (25 Sections) + Gemma 4 LoRA/Unsloth + Eve v1.1.0',
+    submission_status TEXT DEFAULT 'جاري التنفيذ حتى 17 أكتوبر'
+);
+
+-- ==============================================================================
+-- PART 2: FULL POPULATED DATA (UPSERT SAFE)
+-- ==============================================================================
+
+-- 1. ENTERPRISE
+INSERT INTO public.meshawir_enterprises (id, name, legal_name, commercial_register, tax_number, headquarters_address, ceo_name, branch_manager_name, cto_name)
+VALUES
+('ent-mashawer', 'مشاوير للمنصات الرقمية', 'شركة مشاوير للمنصات الرقمية وخدمات النقل الذكي ذ.م.م', '757315518', '662709268', 'مدينة المعراج بجوار كارفور المعادي، قسم المعادي، القاهرة (25.91م × 20.94م)', 'أبو خالد', 'المهندس عماد الشرقاوي', 'المهندس سامح يس')
+ON CONFLICT (id) DO UPDATE SET
+    branch_manager_name = EXCLUDED.branch_manager_name,
+    cto_name = EXCLUDED.cto_name,
+    headquarters_address = EXCLUDED.headquarters_address;
+
+-- 2. ALL PROJECTS (INCLUDING FULL 4B, DARO, WEKALA, MAADI HQ, 4B OPS, KAGGLE, AGOUZA RESTAURANT, SUBSIDIARY, ARCHIVED NOUB)
+INSERT INTO public.projects (id, enterprise_id, name, code, category, status, figma_completion_pct, description, repo_url, figma_url, live_url, apk_files, context_hints, db_info)
+VALUES
+(
+    'proj-4b',
+    'ent-mashawer',
+    'تطبيق فور بي للركاب والأسطول (4B / GoRide)',
+    '4B',
+    'مشاوير',
+    'في الإنتاج والاختبار الميداني',
+    95,
+    'تطبيق طلب الرحلات والمزايدة الحية (عرض ينتهي خلال 15 ثانية لو انقطع اتصال الكابتن، ومهلة OTP 60 ثانية). يعمل على Node.js 22 + NestJS + Next.js SSR + PostgreSQL 16 + PostGIS 3.4 + Redis 7 + Cloudinary Signed HMAC + BroadNet/Twilio + Fawry Webhook + CompreFace KYC محلي في مصر على خوادم WE التزاماً بقانون النقل الذكي 87/2018 وحماية البيانات 151/2018.',
+    'https://github.com/mashweer/4b-passenger-app',
+    'https://www.figma.com/design/ulWwUzLnKThS2cfJWDetX6/%D9%85%D8%B4%D8%A7%D9%88%D9%8A%D8%B1---backlog?node-id=221-63531&t=uCzHJZbEM1gi1Zz8-0',
+    'https://admin.4b.com.eg',
+    '[{"id":"apk-4b-1","version":"v1.4.2-beta","buildNumber":142,"fileName":"4B_Passenger_v1.4.2_release.apk","fileSize":"34.8 MB","status":"جاهز للاختبار"},{"id":"apk-4b-drv","version":"v2.4.1-rc","buildNumber":241,"fileName":"Mashweer_Driver_4B.apk","fileSize":"42.5 MB","status":"قيد التجربة الميدانية"}]'::jsonb,
+    '["يختلف جذرياً عن وكالة: يستخدم PostgreSQL+PostGIS+Fawry+BroadNet+CompreFace وليس MongoDB أو Agora أو Paymob","فجوات ما قبل الإطلاق: FCM OAuth2، تحويل خريطة الأدمن من Leaflet لـ Google Maps، استكمال 20 طابور BullMQ، ترقية NestJS 11، وتثبيت اتجاه أرقام الهواتف واللوحات LTR","آلة الحالات الـ 6 تُدار من السيرفر لمنع التلاعب"]'::jsonb,
+    '{"engine":"PostgreSQL 16 + PostGIS 3.4 + Redis 7","tables":["trips","passengers","captains","saved_addresses","ride_ratings","bidding_offers","wallets","fawry_transactions","coupons"]}'::jsonb
+),
+(
+    'proj-daro',
+    'ent-mashawer',
+    'تطبيق دارو السوبر آب للشحن والطرود (Daro Super App)',
+    'DARO',
+    'مشاوير',
+    'قيد التطوير (فيجما 70%)',
+    70,
+    'منصة السوبر آب متعددة الخدمات اللوجستية: (1) الطرود السريعة بنفس اليوم داخل المدينة، (2) الشحن الثقيل والتجاري بين المحافظات، (3) توصيل المتاجر الإلكترونية. يشمل توليد بوليصة رقمية بباركود فريد Code128/QR بـ 3 نقاط مسح (استلام، فرز، تسليم بتوقيع/رمز)، وقراءة الباركود عبر Google ML Kit أو أجهزة Handheld، ومحفظة التحصيل عند الاستلام COD لتسوية مستحقات التجار، مع فكرة توسع مستقبلية لمشروع دارو لندن.',
+    'https://github.com/mashweer/daro-cargo-system',
+    'https://www.figma.com/design/aR1aanpRzGL7aMoxROGgt5/Daro?node-id=0-1&t=HFGqvAl4RPmlMliu-1',
+    'https://daro.eg',
+    '[]'::jsonb,
+    '["حسم قرار شراء أجهزة Barcode Scanner ليزر أم الاعتماد على كاميرا الموبايل عبر Google ML Kit","تدوير سجلات التتبع tracking_logs دورياً","تشمل الرؤية المستقبلية إطلاق Daro London في بريطانيا"]'::jsonb,
+    '{"engine":"PostgreSQL / Supabase + Redis","tables":["shipments","waybills","cargo_hubs","warehouses","truck_dispatches","cod_wallets","tracking_logs","manifests"]}'::jsonb
+),
+(
+    'proj-wekala',
+    'ent-mashawer',
+    'منصة وتطبيق وكالة لإدارة الأساطيل والمكاتب (WeKaLa)',
+    'WEKALA',
+    'مشاوير',
+    'قيد الاختبار واستلام السورس كود (فيجما 80%)',
+    80,
+    'منصة إدارة الوكالات الإقليمية ومكاتب التوصيل بالمحافظات: تسجيل الوكلاء برفع السجل التجاري وهوية المدير، ربط الكباتن بكود وكالة ترويجي لتقاسم العمولات، وكشف حساب أسبوعي وصرف الأرباح. تم استلام APK v1.2.0 وتدقيق لوحة الأدمن، ومطلوب حسم استلام سورس Flutter الكامل ومفاتيح التوقيع Keystore وربط خطوط المحافظات الستة 4Mbps من WE.',
+    'https://github.com/mashweer/wekala-fleet-management',
+    'https://www.figma.com/design/oYxkmwZcGae674BRA5ZOen/Wikala?node-id=0-1&t=rbE4CPeGiTAMMin2-1',
+    'https://wekala.mashawer.com.eg',
+    '[{"id":"apk-w-1","version":"v1.2.0","buildNumber":12,"fileName":"Wekala_v1.2.apk","fileSize":"28.7 MB","status":"تم تدقيق لوحة الإدارة"}]'::jsonb,
+    '["يُكتب بالإنجليزية WeKaLa","ضرورة استلام Keystore من المطور قبل الدفعة الأخيرة","يستخدم Twilio/Paymob/Agora وفق تقرير الفصل البرمجي"]'::jsonb,
+    '{"engine":"PostgreSQL / MongoDB + Redis","tables":["agencies","branch_managers","fleet_vehicles","captain_assignments","agent_commissions","documents","wallets"]}'::jsonb
+),
+(
+    'proj-maadi-hq',
+    'ent-mashawer',
+    'البنية التحتية وغرفة سيرفرات مقر المعادي (Maadi HQ IT)',
+    'MAADI-HQ-IT',
+    'بنية تحتية',
+    'في الإنتاج والتشغيل الفعلي',
+    100,
+    'المقر الرئيسي بالمعراج المعادي بقيادة م/ عماد الشرقاوي كمدير للفرع: راك Perla 27U، جدار الحماية والراوتر TP-Link ER8411 (شغال فعلياً يدمج خط أرضي WE ADSL + خط Vodafone 5G)، سنترال Grandstream 604A (شغال فعلياً بالخط الأرضي الثاني)، سويتش سيسكو 3850 48P، سيرفر Dell R640، محطتي HP Z440، 16 كاميرا 5MP + NVR 4K، جهاز البصمة ZKTeco، طابعة HP M404n، و3 أجهزة ديل مكتبية (التوسع لـ 8 ثم 17 مكتباً).',
+    'https://github.com/mashweer/maadi-infrastructure',
+    '',
+    'https://mashawer.com.eg',
+    '[]'::jsonb,
+    '["تم إلغاء Active Directory المحلي والاعتماد على Workgroup + Zoho + Proxmox/OPNsense + خزنة نسخ ليلي 3:00 ص","تم شراء وتشغيل TP-Link ER8411 و Grandstream 604A فعلياً","مطلوب استكمال شراء UPS 1500VA وتكييف غرفة السيرفرات"]'::jsonb,
+    '{"engine":"Proxmox VE 8.x + TP-Link ER8411 + Cisco IOS-XE","tables":["vlans","firewall_rules","pbx_extensions","nvr_streams","dhcp_leases","rack_ports"]}'::jsonb
+),
+(
+    'proj-4b-operations-noc',
+    'ent-mashawer',
+    'غرفة عمليات ومراقبة 4B (4B Operations NOC)',
+    '4B-OPS-NOC',
+    'عمليات وتشغيل',
+    'في الإنتاج',
+    100,
+    'غرفة العمليات المركزية بالمعادي بقيادة م/ موفق وم/ عمرو وفريق الكول سنتر الخماسي ومحلل البيانات: تتابع لحظياً خوادم WE السحابية الثلاثة (4B-App, 4B-DB, 4B-Cache)، جدار F5 WAF، دوائر الفايبر وLTRA، والرد على مكالمات العملاء والكباتن عبر سنترال Grandstream 604A.',
+    'https://github.com/mashweer/4b-operations-noc',
+    '',
+    'https://ops.mashawer.com.eg',
+    '[]'::jsonb,
+    '["نشأت من إعادة توجيه وتطوير فكرة غرفة مراقبة التداول السابقة لخدمة أسطول 4B","مراقبة زمن التأخير < 5ms وتجربة محاكاة الفشل DR"]'::jsonb,
+    '{"engine":"PostgreSQL / PostGIS","tables":["trips_stream","active_drivers","sos_alerts","latency_metrics","audit_logs"]}'::jsonb
+),
+(
+    'proj-kaggle-ucp',
+    'ent-mashawer',
+    'مسابقة كاجل العالمية ($100k) وبروتوكول الأسد الأبيض UCP-LLM',
+    'KAGGLE-UCP',
+    'أبحاث وذكاء',
+    'جاري التنفيذ (موعد 17 أكتوبر)',
+    90,
+    'مشروع بحثي يقوده المهندس سامح يس في مسار Paper Track ($100,000) على Kaggle بالتنسيق مع معايير Ryan Holbrook، قبل 17 أكتوبر (عيد ميلاده 18 أكتوبر). يقوم على فلسفة الأسد الأبيض وبروتوكول UCP-LLM من 25 قسماً (20 قيادة/فروسية/هدوء/مسرح + 5 تقني) وتدريب Gemma 4 بـ LoRA/Unsloth وأداة Eve v1.1.0.',
+    'https://github.com/mashweer/kaggle-gemma-ucp',
+    '',
+    'https://kaggle.com',
+    '[]'::jsonb,
+    '["الحالة الدراسية الأولى: توفير 80–120 ألف جنيه سنوياً بتطبيق القيود الهندسية","خطة 17 يوماً من 1 إلى 17 أكتوبر"]'::jsonb,
+    '{"engine":"Python / Unsloth / LoRA","tables":["benchmarks","eval_runs","ucp_sections","token_logs"]}'::jsonb
+),
+(
+    'proj-agouza-restaurant',
+    'ent-mashawer',
+    'مشروع مطعم المشويات بالعجوزة (توريدات POS وCCTV)',
+    'AGOUZA-REST',
+    'مشروعات جانبية',
+    'في التأسيس والتوريد',
+    100,
+    'مشروع تجاري مملوك لأبو خالد تحت الإدارة التنفيذية الحصرية للأستاذ هاني (CFO)، مع توحيد المشتريات التقنية مع المهندس علي (شركة الأصدقاء): نظام كاشير POS، درج نقدية، طابعات مطبخ وفواتير، و14 كاميرا مراقبة بالمشاهدة عن بعد، مع فصل حساباته تماماً عن مشاوير.',
+    '', '', '', '[]'::jsonb,
+    '["إمكانية ربط توصيل طلبات المطعم لاحقاً بأسطول 4B أو داره"]'::jsonb, '{}'
+),
+(
+    'proj-app4-future',
+    'ent-mashawer',
+    'التطبيق الرابع الاحتمالي والشركة التابعة التكنولوجية',
+    'APP4-SUBSIDIARY',
+    'توسع مستقبلي',
+    'قيد الدراسة والتخطيط',
+    0,
+    'فكرة التطبيق الرابع تحت التقييم مع المطورين، ومقترح تأسيس الشركة التابعة خارج القاهرة لأبو خالد والمهندس سامح يس بـ 10 أهداف استراتيجية وهيكل 4 مهندسين + 2 استشاريين.',
+    '', '', '', '[]'::jsonb, '[]'::jsonb, '{}'
+)
+ON CONFLICT (id) DO UPDATE SET
+    name = EXCLUDED.name,
+    status = EXCLUDED.status,
+    figma_completion_pct = EXCLUDED.figma_completion_pct,
+    description = EXCLUDED.description,
+    context_hints = EXCLUDED.context_hints,
+    db_info = EXCLUDED.db_info;
+
+-- 3. MILESTONES (VALUE TECH 7-WEEK PLAN M1-M5 + KEY PROJECTS)
+INSERT INTO public.meshawir_project_milestones (id, project_id, phase_code, title, target_date, completion_percentage, status, deliverables_summary, sign_off_by)
+VALUES
+('ms-4b-m1', 'proj-4b', 'M1 (W1-W2)', 'المرحلة 1: التشغيل الأساسي وإدارة الكباتن والركاب وفحص الكود وقاعدة البيانات', '2026-09-25', 90, 'قيد الإغلاق', 'استلام المستودع، قاعدة PostGIS، تدفق الرحلة الكامل من السيرفر، ومطابقة فيجما', 'المهندس سامح يس'),
+('ms-4b-m2', 'proj-4b', 'M2 (W3)', 'المرحلة 2: التسعير الديناميكي والمزايدة 15ث وإغلاق الثغرات وBroadNet + Maps', '2026-10-02', 45, 'جاري التنفيذ', 'مؤقت 60ث للـ OTP، حماية الأسعار من السيرفر، روابط Cloudinary الموقعة، وتكامل برودنت', 'المهندس سامح يس وعمرو وموفق'),
+('ms-4b-m3', 'proj-4b', 'M3 (W4-W5)', 'المرحلة 3: النواة المالية وفوري وكشف حساب المحفظة والاختبارات الميدانية', '2026-10-09', 20, 'قيد الإعداد', 'بوابة فوري وWebhook موثق، تسويات الكباتن والضرائب، والاختبار الميداني بـ 4B', 'الأستاذ هاني والمطور'),
+('ms-4b-m4', 'proj-4b', 'M4 (W6)', 'المرحلة 4: الحوكمة وفصل الصلاحيات وتسليم وكالة (WeKaLa) ولوحات المكاتب', '2026-10-16', 15, 'مخطط', 'صلاحيات RBAC، لوحات الوكلاء، وإصلاح ملاحظات الاختبار', 'المهندس عماد الشرقاوي والمهندس سامح يس'),
+('ms-4b-m5', 'proj-4b', 'M5 (W7)', 'المرحلة 5: اختبارات القبول النهائية UAT وتطبيق داره وشهادات المنشأ والإطلاق', '2026-10-23', 10, 'مخطط', 'إطلاق تجاري لـ 4B، استكمال شاشات داره وماسح الباركود، Keystore، وتسوية قيمة تك', 'أبو خالد والمحامي والمهندس سامح يس')
+ON CONFLICT (id) DO UPDATE SET
+    completion_percentage = EXCLUDED.completion_percentage,
+    status = EXCLUDED.status,
+    deliverables_summary = EXCLUDED.deliverables_summary;
+
+-- 4. TEAM PROFILES (الاسم الصحيح: سامح يس + الأولوية لعماد الشرقاوي عند الجمع)
+INSERT INTO public.meshawir_team_profiles (id, full_name, short_name, title, category, efficiency_rate, email, phone, role_description, readiness_status, priority_order)
+VALUES
+('eng-emad', 'المهندس عماد الشرقاوي', 'المهندس عماد الشرقاوي', 'المستشار التقني الأول ومدير فرع المعادي (استلام كامل الإدارة)', 'leadership', 98, 'admin@mashweer.com.eg', '01000000003', 'مدير فرع المعادي والمستشار التقني الأول؛ يتسلم إدارة المقر، الاتصالات، السنترال Grandstream 604A، راوتر/فايروول TP-Link ER8411، سيرفرات WE والـ SSL VPN، والتنسيق مع LTRA. يُذكر اسمه دائماً قبل المهندس سامح يس.', 'جاهز وحاضر', 1),
+('eng-sameh', 'المهندس سامح يس', 'المهندس سامح يس', 'رئيس قطاع التكنولوجيا (CTO) وقائد المنظومة البرمجية والذكاء الاصطناعي', 'leadership', 99, 'admin@mashweer.com.eg', '01000000002', 'رئيس قطاع التكنولوجيا ومسؤول المنظومة البرمجية للتطبيقات الثلاثة (4B، وكالة، دارو)، خطة قيمة تك، سوبابيز، وبحث كاجل والأسد الأبيض.', 'جاهز وحاضر', 2),
+('investor-abu-khaled', 'أبو خالد', 'أبو خالد', 'المالك والمستثمر الرئيسي للشركة كلها', 'leadership', 95, 'ceo@mashawer.com.eg', '01000000001', 'المالك الاستراتيجي للمجموعة؛ يعتمد الميزانيات الكبرى، الشركة التابعة، التسويق، ومطعم العجوزة.', 'متابعة استراتيجية', 3),
+('admin-hany', 'الأستاذ هاني', 'أ/ هاني', 'المدير المالي (CFO) وقائد مشروع مطعم العجوزة', 'finance', 90, 'finance@mashweer.com.eg', '01000000005', 'يدير الحسابات والفواتير الضريبية ETA وفيزا الشركة وبوابة فوري وتسويات الكباتن والمتابعة الحصرية لمطعم المشويات بالعجوزة.', 'جاهز وحاضر', 4),
+('lawyer-mostafa', 'الأستاذ محمد مصطفى', 'أ/ محمد مصطفى (المحامي)', 'المستشار القانوني العام للشركة', 'legal', 95, 'legal@mashawer.com.eg', '01000000004', 'مسؤول الملفات القانونية الأربعة: قيمة تك، تراخيص LTRA، إيداعات ITIDA والشهر العقاري، وعقود الموظفين والخطوط الرسمية.', 'جاهز وحاضر', 5),
+('ops-mowaffaq', 'الأستاذ موفق', 'م/ موفق', 'مدير عمليات المنظومة والجودة والطوارئ (4B)', 'operations', 99, 'operation@mashweer.com.eg', '01000000007', 'خبرة +10 سنوات أوبر/كريم؛ مسؤول ضبط الجودة والنزاعات وSOS وتدريب الكول سنتر على السنترال.', 'جاهز وحاضر', 6),
+('ops-amr', 'المهندس عمرو', 'م/ عمرو', 'قائد العمليات الميدانية للأسطول والتسويق الفني (4B)', 'operations', 99, 'operation@mashweer.com.eg', '01000000012', 'خبرة +10 سنوات أوبر/كريم؛ يدير أسطول الكباتن والحوافز والتسعير ومتابعة وكالات الدعاية.', 'جاهز وحاضر', 7),
+('eng-obeid', 'المهندس أحمد عبيد', 'م/ أحمد عبيد', 'مهندس IT ومساعد تقني معتمد (The Assist - خبرة +5 سنوات)', 'technical', 68, 'support@mashweer.com.eg', '01000000013', 'المساعد التقني المعتمد بالمقر لصيانة الأجهزة والشبكة ودعم الموظفين يومياً.', 'جاهز وحاضر', 8),
+('tech-hatem', 'حاتم الفني', 'حاتم', 'فني تمديدات شبكات وبنية سلكية (بالأجرة)', 'technical', 85, 'hatem@mashweer.com.eg', '01000000014', 'مسؤول سحب كابلات Cat6 بالسقف المعلق، تأريج الباتش بانل الـ 48 منفذاً، واختبارها بجهاز I-Pook.', 'ميداني بالاستدعاء', 9),
+('hr-sara', 'الأستاذة سارة حسن', 'أ/ سارة حسن', 'مسؤولة الموارد البشرية والشؤون الإدارية', 'operations', 90, 'info@mashweer.com.eg', '01000000016', 'متابعة جهاز البصمة ZKTeco، عقود الموظفين، وعهدة أجهزة المقر (بعد إلغاء إيميل hr@ لتوفير التكلفة).', 'جاهز وحاضر', 10),
+('eng-enad', 'المهندس عناد', 'م/ عناد', 'استشاري جدوى وتكامل تقني خارجي', 'technical', 90, '', '', 'استشاري دراسات الجدوى الفنية والتوسعية.', 'استشاري', 11),
+('qa-ali-office7', 'المهندس علي (مكتب 7)', 'م/ علي QA', 'مسؤول ضمان جودة تطبيقات الموبايل', 'technical', 88, '', '', 'اختبار تطبيقات 4B ووكالة وداره ومطابقتها لتصاميم فيجما (مكتب 7).', 'نشط', 12),
+('support-team-5', 'فريق خدمة العملاء والكول سنتر (5 موظفين) + محلل بيانات', 'الكول سنتر والتحليل', 'طاقم تشغيل صالة العمليات الكبرى بالمعادي', 'operations', 92, 'support@mashweer.com.eg', '', 'الرد على الركاب والكباتن عبر تحويلات السنترال 107-111 ومتابعة الخرائط الحرارية.', 'جاري التسكين', 13)
+ON CONFLICT (id) DO UPDATE SET
+    full_name = EXCLUDED.full_name,
+    short_name = EXCLUDED.short_name,
+    title = EXCLUDED.title,
+    role_description = EXCLUDED.role_description;
+
+-- 5. SERVICE PROVIDERS
+INSERT INTO public.service_providers (id, name, category, portal_url, username, account_manager, contact_phone, contact_email, status, cost_or_plan, official_badge, active_services)
+VALUES
+('prov-we-telecom', 'المصرية للاتصالات (WE Telecom Egypt)', 'سيرفرات سحابية وفايبر وADSL وخطوط أرضية', 'https://cloud.te.eg/portal', 'mashweer_telecom_admin', 'م/ أحمد محرم وم/ أحمد غريب', '01000000009', 'cloud-sales@te.eg', 'معتمد وموقع (أوامر شراء 6078927 و 6078933)', '1,167,496 ج.م/سنوياً (سحابة 807,496 + فايبر L3VPN 360,000) + خط أرضي ADSL 1 + خط أرضي 2 للسنترال', 'المشغل الوطني المعتمد', '["3 خوادم سحابية 4B (App, DB, Cache)","F5 WAF + 7 SSL VPN","فايبر 24Mbps + 6 فروع 4Mbps","خط أرضي WE ADSL 1 على ER8411","خط أرضي 2 على سنترال Grandstream 604A"]'::jsonb),
+('prov-vodafone-5g', 'فودافون مصر (صقر قريش - Vodafone 5G/4G)', 'إنترنت 5G وخطوط شرائح OTP', 'http://192.168.8.1', 'vodafone_maadi_hq', 'فرع صقر قريش', '', '', 'نشط وشغال فعلياً بالمقر', 'فاتورة #748994 بقيمة 3,326.46 ج.م + باقة 5G النشطة حالياً', 'إنترنت 5G شغال على ER8411', '["خدمة Vodafone 5G متصلة بـ TP-Link ER8411 WAN2","راوتر H153-381 وشريحة AT Home","خطوط فودافون مسجلة لبوابة BroadNet OTP"]'::jsonb),
+('prov-ec-egypt', 'المصرية لتكنولوجيا المعلومات (EC / eyg.com.eg)', 'نطاقات واستضافة وإيميلات Zoho', 'https://clients.ec.com.eg/clientarea.php', 'mashawer_admin', 'م/ محمد الحلو', '01551553434', 'info@ec.com.eg', 'نشط ومجدد حتى أغسطس 2027', 'COM.EG (1,254 ج.م) + Host1 SSL (2,508 ج.م) + 5 إيميلات Zoho مجانية', 'مزود النطاقات الرسمي', '["mashawer.com.eg","استضافة Host1 cPanel 2083","5 إيميلات Zoho Lite (بعد إلغاء HR)"]'::jsonb),
+('prov-broadnet', 'برودنت (BroadNet A2P SMS)', 'رسائل OTP المحلية لتطبيق 4B', 'https://broadnetme.com/portal/login', 'mashawer', 'مهندسة الدعم الفني بـ BroadNet', '', '', 'نشط (25 رصيد اختبار)', 'حساب A2P باسم مرسل GoRide / Mashawer', 'بوابة OTP مصر', '["Sender ID معتمد على شبكات مصر","API للـ Backend"]'::jsonb),
+('prov-twilio', 'تويليو (Twilio SMS)', 'رسائل OTP لوكالتي ودارو + احتياطي', 'https://console.twilio.com', 'twilio_mashweer_sim', 'م/ سامح يس و م/ عماد الشرقاوي', '', '', 'تم شراء الشريحة وجاري التفعيل', 'دفع حسب الاستخدام', 'بوابة دولية واحتياطية', '["Twilio OTP لتطبيقات WeKaLa و Daro"]'::jsonb),
+('prov-fawry', 'شركة فوري (Fawry Enterprise)', 'بوابة الدفع الإلكتروني وصرف الكباتن', 'https://fawry.com', 'FAWRY_MERCHANT_CODE_MASHWEER', 'الأستاذ هاني + مدير حساب فوري', '', '', 'جاري استكمال التعاقد وSandbox', 'عقد تاجر تحصيل وصرف', 'بوابة الدفع الرسمية لـ 4B', '["تحصيل بطاقات وأكواد فوري","صرف محافظ الكباتن","Webhook الدفع المؤمن"]'::jsonb),
+('prov-cloudinary', 'كلاوديناري (Cloudinary)', 'تخزين الوثائق ورخص الكباتن المشفر', 'https://cloudinary.com', 'mashweer-cloud', 'admin@mashweer.com.eg', '', '', 'نشط ومطلوب تفعيل الروابط الموقعة', 'خطة مدفوعة + SHA-256 HMAC', 'خزنة الوثائق السحابية', '["تخزين رخص القيادة والبطاقات بروابط مؤقتة خاصة"]'::jsonb),
+('prov-google-maps', 'خرائط جوجل (Google Maps Platform)', 'الخرائط والتوجيه وحساب المسافات', 'https://console.cloud.google.com', 'admin@mashweer.com.eg', 'القيادة التقنية والمالية', '', '', 'نشط ومطلوب وضع حدود الميزانية', 'فوترة GCP الشهرية', 'محرك الخرائط', '["Server Key مقيد بـ IP","Web Key مقيد بالدومين"]'::jsonb),
+('prov-friends-cctv', 'شركة الأصدقاء للأنظمة الأمنية (بشمهندس علي)', 'كاميرات المراقبة (المعادي + العجوزة) وPOS المطعم', 'مباشر / تليفوني', 'eng_ali_friends', 'بشمهندس علي', '01000000015', '', 'معتمد للمعادي ومطعم العجوزة', 'عرض المعادي 55,050 ج.م + عرض POS وكاميرات العجوزة', 'المورد الموحد للأنظمة الأمنية', '["16 كاميرا Hikvision 5MP","NVR 16ch 4K + 4TB","POS وكاميرات مطعم العجوزة"]'::jsonb),
+('prov-qeema-tech', 'شركة قيمة تك / فاليوتيك (ValueTech / Qeema Tech)', 'شريك التطوير البرمجي الخارجي', 'https://qeematech.com', 'mashweer_corp', 'م/ حازم', '01000000008', '', 'تحت خطة 7 أسابيع والإنذار/التسوية القانونية', 'خطة M1-M5 + 20 مهمة مفتوحة', 'مطور خارجي خاضع للحوكمة', '["تطوير 4B ووكالة ودارو","تسليم السورس وKeystore وشهادات المنشأ"]'::jsonb),
+('prov-qts-servers', 'شركة كيو تي إس (QTS Servers)', 'توريد الخوادم والسويتش', 'نظام الضرائب ETA', 'qts_sales_corp', 'إدارة مبيعات QTS', '0223967890', '', 'مسددة بفاتورتين ضريبيتين', '96,295.80 + 11,970 = 108,265.80 ج.م', 'مورد ضريبي معتمد', '["Dell PowerEdge R640","2x HP Z440","Cisco Catalyst 3850-48P"]'::jsonb),
+('prov-redline', 'شركة رد لاين البستان (RedLine)', 'كابينة الراك وأدوات الشبكة', 'https://redline-stores.com', 'sameh_yassin', 'مبيعات البستان', '0223912345', '', 'مسددة بالكامل', '18,550.00 ج.م شاملة الضريبة', 'مورد البستان', '["Perla Rack 27U 1000mm","I-Pook PK65H","RJ45 + Root Crimper"]'::jsonb)
+ON CONFLICT (id) DO UPDATE SET
+    status = EXCLUDED.status,
+    cost_or_plan = EXCLUDED.cost_or_plan,
+    active_services = EXCLUDED.active_services;
+
+-- 6. SERVER RACK & MOUNTED DEVICES (UPDATED WITH TP-LINK ER8411 & GRANDSTREAM 604A)
+INSERT INTO public.meshawir_server_racks (id, name, total_units, depth_mm, location, cooling_type, power_backup, lock_status)
+VALUES
+('rack-maadi-27u', 'PERLA 27U SERVER ENCLOSURE (غرفة IT المصفحة بالمعادي)', 27, 1000, 'مقر المعراج بالمعادي - غرفة السيرفرات (5.74م × 1.96م)', '4x مراوح سقفية + تكييف مخصص 24/7', 'PDU 8 منافذ + خطة UPS 1500VA', 'مغلق ومؤمن لدى م/ عماد الشرقاوي وم/ سامح يس')
+ON CONFLICT (id) DO UPDATE SET
+    location = EXCLUDED.location,
+    lock_status = EXCLUDED.lock_status;
+
+INSERT INTO public.meshawir_rack_devices (id, rack_id, name, arabic_name, model, manufacturer, u_position_start, u_height, device_category, serial_number, ip_management, mac_address, power_watts, status, notes)
+VALUES
+('patch-panel-1', 'rack-maadi-27u', 'Patch Panel 24 Port #1', 'لوحة التوزيع الأولى Cat6 (المكاتب والكول سنتر والطابعة والهواتف)', 'Cat6 24-Port 1U Patch Panel', 'Perla / RedLine', 27, 1, 'patch_panel', 'PP1-24P-01', 'Passive', 'Passive', 0, 'online', 'المنفذ 7 مخصص لطابعة HP M404n بمكتب 5'),
+('cisco-switch-48', 'rack-maadi-27u', 'Cisco Catalyst 3850-48P', 'سويتش سيسكو 48 بورت PoE+ بباور سبلاي مزدوج 715W', 'WS-C3850-48P-S Dual 715W', 'Cisco Systems', 26, 1, 'switch', 'FCW2148L0P9', '192.168.10.2', 'F4:0F:1B:7A:48:00', 340, 'online', 'يدير 6+ VLANs ويربط الراوتر ER8411 والسنترال 604A والسيرفر R640 والكاميرات'),
+('patch-panel-2', 'rack-maadi-27u', 'Patch Panel 24 Port #2', 'لوحة التوزيع الثانية Cat6 (الكاميرات الـ 16 والسيرفرات والواي فاي)', 'Cat6 24-Port 1U Patch Panel', 'Perla / RedLine', 25, 1, 'patch_panel', 'PP2-24P-02', 'Passive', 'Passive', 0, 'online', 'مفحوصة بجهاز I-Pook PK65H'),
+('dell-r640', 'rack-maadi-27u', 'Dell PowerEdge R640 Server', 'سيرفر ديل بلاتينيوم الرئيسي + وحدة إدارة iDRAC9', 'PowerEdge R640 (2x Xeon Platinum 8160, 64GB ECC)', 'Dell Technologies', 24, 1, 'server', '7X9K4R2', '192.168.10.10 (iDRAC: 192.168.10.9)', 'D8:9E:F3:11:42:01', 380, 'online', '4 منافذ LACP + iDRAC9 + خزنة النسخ الاحتياطي وبيئة 4B المحلية'),
+('hp-z440-rack', 'rack-maadi-27u', 'HP Z440 Proxmox Node', 'محطة عمل وسيرفر بروكس موكس HP Z440 #1 (Xeon 18-Core)', 'HP Z440 Xeon E5-2697 v4 64GB', 'HP Enterprise', 23, 1, 'server', 'Z440-HQ-01', '192.168.10.20', 'E4:11:5B:C9:88:10', 180, 'online', 'يشغل Proxmox VE 8.x وحاويات Docker وOPNsense مساند ومزامنة أسبوعية'),
+('rack-spacer-empty', 'rack-maadi-27u', 'Clear Empty Space (Airflow Bay)', 'مسافة تهوية وفصل حراري فارغة واضحة (2U-3U)', 'Clear Airflow Separation Bay', 'Perla', 21, 2, 'spacer', 'EMPTY-BAY', 'N/A', 'N/A', 0, 'online', 'فصل حراري بين السيرفرات وأجهزة المراقبة والاتصالات'),
+('nvr-16-ch', 'rack-maadi-27u', 'Hikvision 16-Channel 4K NVR', 'جهاز تسجيل كاميرات المراقبة هيكفيجن 16 قناة (هارد 4TB Purple)', 'DS-7616NI-I2/16P', 'Hikvision', 20, 1, 'nvr', 'HK-NVR-16-01', '192.168.20.100', 'C4:2F:90:3A:55:12', 140, 'online', 'يسجل 16 كاميرا بدقة 5MP منها 4 صوتية على VLAN 20'),
+('grandstream-pbx-604a', 'rack-maadi-27u', 'Grandstream UCM6304A (604A) IP PBX', 'سنترال المقر الذكي جراند ستريم 604A (تم الشراء والتشغيل بالخط الأرضي الثاني)', 'Grandstream UCM6304A Enterprise IP PBX (4 FXO / 4 FXS)', 'Grandstream Networks', 19, 1, 'pbx', 'GS-604A-MAADI', '192.168.30.1 (Port 8089)', '00:0B:82:94:12:3C', 45, 'online', 'شغال فعلياً بالخط الأرضي الثاني + عِدد Grandstream GRP2614 + تحويلات 100–116 + IVR'),
+('tplink-er8411-fw', 'rack-maadi-27u', 'TP-Link ER8411 Router & Firewall', 'راوتر وجدار حماية تي بي لينك ER8411 (تم الشراء والتشغيل كراوتر وفايروول معاً)', 'TP-Link Omada ER8411 Enterprise Multi-WAN VPN Router & Firewall', 'TP-Link Omada', 18, 1, 'firewall', 'TPL-ER8411-01', '192.168.10.1 (Mgmt HTTPS)', '70:4C:A5:10:E2:80', 60, 'online', 'شغال فعلياً الآن يدمج WAN1 (خط أرضي 1 - WE ADSL) + WAN2 (Vodafone 5G) + يدعم فايبر WE L3VPN + توزيع VLANs وVPN')
+ON CONFLICT (id) DO UPDATE SET
+    name = EXCLUDED.name,
+    arabic_name = EXCLUDED.arabic_name,
+    model = EXCLUDED.model,
+    ip_management = EXCLUDED.ip_management,
+    status = EXCLUDED.status,
+    notes = EXCLUDED.notes;
+
+-- 7. KEY RACK PORTS (TP-LINK ER8411 + GRANDSTREAM 604A + CISCO 3850 REPRESENTATIVE & CRITICAL PORTS 1-48)
+INSERT INTO public.meshawir_rack_ports (id, device_id, port_number, label, status, connected_device, device_type, user_endpoint, ip_address, vlan_name, vlan_id, poe_watts, cable_color, patch_panel_cross_port, notes)
+VALUES
+-- TP-Link ER8411 Ports (Multi-WAN Live Setup)
+('er8411-p1', 'tplink-er8411-fw', 1, 'WAN1 (RJ45)', 'active', 'راوتر خط أرضي 1 - إنترنت WE ADSL', 'uplink', 'خط أرضي رقم 1 بالمعادي (WE ADSL)', 'DHCP / PPPoE', 'WAN1 - WE ADSL', 901, 0, 'yellow', NULL, 'مشغّل حالياً كمصدر إنترنت أرضي أساسي داخل TP-Link ER8411'),
+('er8411-p2', 'tplink-er8411-fw', 2, 'WAN2 (RJ45)', 'active', 'راوتر Vodafone 5G (فودافون الجيل الخامس)', 'uplink', 'باقة إنترنت Vodafone 5G بالمقر', '192.168.8.1 (Gateway)', 'WAN2 - Vodafone 5G', 902, 0, 'red', NULL, 'مشغّل فعلياً الآن على ER8411 لموازنة الأحمال والسرعة العالية والطوارئ'),
+('er8411-p3', 'tplink-er8411-fw', 3, 'WAN3 (SFP+ Fiber)', 'standby', 'مسار استقبال خط فايبر المصرية للاتصالات WE 24Mbps (PO 6078927)', 'uplink', 'سنترال المعادي ↔ القرية الذكية L3VPN', '10.240.18.2', 'VLAN 90 - WE L3VPN', 90, 0, 'cyan', NULL, 'منفذ جاهز لوصول خط الفايبر الأرضي من WE خلال 4–6 أسابيع'),
+('er8411-p4', 'tplink-er8411-fw', 4, 'LAN1 Trunk (10G SFP+)', 'active', 'ترنك الشبكة الرئيسي ↔ سويتش سيسكو 3850 (Gi1/0/33)', 'switch', 'قلب الشبكة الداخلية وتوزيع الـ VLANs', '192.168.10.1', 'All VLANs 802.1Q Trunk', 1, 0, 'blue', NULL, 'يمرر قواعد الجدار الناري وعزل الشبكات لكل أجهزة المقر'),
+-- Grandstream 604A (UCM6304A) Ports (Live Telephony Setup)
+('gs604a-p1', 'grandstream-pbx-604a', 1, 'LAN (Gigabit)', 'active', 'سويتش سيسكو 3850 منفذ Gi1/0/13', 'switch', 'شبكة هواتف الـ IP المكتبية (GRP2614) بالمقر', '192.168.30.1', 'VLAN 30 - VoIP PBX', 30, 0, 'green', 13, 'ربط السنترال بكل العِدد المكتبية وتحويلات 101–116'),
+('gs604a-p2', 'grandstream-pbx-604a', 2, 'WAN (SIP Trunk)', 'active', 'واجهة VoIP عبر TP-Link ER8411', 'firewall', 'دعم خطوط SIP المستقبلية والمكالمات المشفرة', '192.168.30.2', 'VLAN 30 - VoIP PBX', 30, 0, 'green', NULL, 'ربط آمن عبر الجدار الناري'),
+('gs604a-p3', 'grandstream-pbx-604a', 3, 'FXO-1 (PSTN)', 'active', 'الخط الأرضي الثاني بالمعادي (راكب مباشرة على السنترال)', 'uplink', 'مكالمات الركاب والكباتن والاستقبال (IVR)', 'PSTN Line 2', 'Analog PSTN', 0, 0, 'gray', NULL, 'الخط الأرضي الثاني موصل وشغال على السنترال الآن'),
+('gs604a-p4', 'grandstream-pbx-604a', 4, 'FXS-1 (Analog)', 'active', 'تليفون/فاكس الاستقبال المباشر (تحويلة 100)', 'voip_phone', 'مكتب الاستقبال الرئيسي', 'Ext 100', 'VLAN 30', 30, 0, 'gray', NULL, 'خط مباشر يعمل حتى في حالات الطوارئ'),
+-- Cisco 3850 Critical Ports (Highlight Port 7 + Core Mapping)
+('c3850-p1', 'cisco-switch-48', 1, 'Gi1/0/1', 'active', 'محطة عمل المهندس عماد الشرقاوي (مدير الفرع)', 'workstation', 'مكتب 5 - الإدارة التقنية', '192.168.10.12', 'VLAN 10 - Staff & Admin', 10, 0, 'blue', 1, 'نقطة رئيسية'),
+('c3850-p2', 'cisco-switch-48', 2, 'Gi1/0/2', 'active', 'محطة عمل المهندس سامح يس (CTO)', 'workstation', 'مكتب 5 - الإدارة التقنية', '192.168.10.11', 'VLAN 10 - Staff & Admin', 10, 0, 'blue', 2, 'نقطة رئيسية'),
+('c3850-p3', 'cisco-switch-48', 3, 'Gi1/0/3', 'active', 'جهاز المستشار القانوني أ/ محمد مصطفى', 'workstation', 'مكتب 4/6 - الشؤون القانونية', '192.168.10.13', 'VLAN 10 - Staff & Admin', 10, 0, 'blue', 3, ''),
+('c3850-p4', 'cisco-switch-48', 4, 'Gi1/0/4', 'active', 'جهاز المدير المالي أ/ هاني', 'workstation', 'مكتب 2/3 - المالية', '192.168.10.14', 'VLAN 10 - Staff & Admin', 10, 0, 'blue', 4, ''),
+('c3850-p5', 'cisco-switch-48', 5, 'Gi1/0/5', 'active', 'جهاز مدير العمليات م/ موفق', 'workstation', 'غرفة عمليات 4B', '192.168.10.15', 'VLAN 10 - Staff & Admin', 10, 0, 'blue', 5, ''),
+('c3850-p6', 'cisco-switch-48', 6, 'Gi1/0/6', 'active', 'جهاز مدير الأساطيل م/ عمرو', 'workstation', 'غرفة عمليات 4B', '192.168.10.16', 'VLAN 10 - Staff & Admin', 10, 0, 'blue', 6, ''),
+('c3850-p7', 'cisco-switch-48', 7, 'Gi1/0/7', 'active', 'طابعة ليزر شبكية HP LaserJet Pro M404n', 'printer', 'مكتب 5 (مكتب الإدارة التقنية)', '192.168.10.45', 'VLAN 10 - Staff & Admin', 10, 0, 'orange', 7, 'المنفذ المرجعي لطابعة التقارير والعقود وبوالص الشحن'),
+('c3850-p8', 'cisco-switch-48', 8, 'Gi1/0/8', 'active', 'جهاز كول سنتر #1 (Dell OptiPlex)', 'workstation', 'القاعة المفتوحة - مقعد 1', '192.168.15.21', 'VLAN 15 - Call Center', 15, 0, 'blue', 8, ''),
+('c3850-p9', 'cisco-switch-48', 9, 'Gi1/0/9', 'active', 'جهاز كول سنتر #2 (Dell OptiPlex)', 'workstation', 'القاعة المفتوحة - مقعد 2', '192.168.15.22', 'VLAN 15 - Call Center', 15, 0, 'blue', 9, ''),
+('c3850-p10', 'cisco-switch-48', 10, 'Gi1/0/10', 'active', 'جهاز كول سنتر #3 (Dell OptiPlex)', 'workstation', 'القاعة المفتوحة - مقعد 3', '192.168.15.23', 'VLAN 15 - Call Center', 15, 0, 'blue', 10, ''),
+('c3850-p11', 'cisco-switch-48', 11, 'Gi1/0/11', 'active', 'جهاز كول سنتر #4 (Dell OptiPlex)', 'workstation', 'القاعة المفتوحة - مقعد 4', '192.168.15.24', 'VLAN 15 - Call Center', 15, 0, 'blue', 11, ''),
+('c3850-p12', 'cisco-switch-48', 12, 'Gi1/0/12', 'active', 'جهاز كول سنتر #5 / محلل البيانات', 'workstation', 'القاعة المفتوحة - مقعد 5', '192.168.15.25', 'VLAN 15 - Call Center', 15, 0, 'blue', 12, ''),
+('c3850-p13', 'cisco-switch-48', 13, 'Gi1/0/13', 'active', 'سنترال جراند ستريم Grandstream 604A (LAN)', 'switch', 'راك U19 - السنترال المركزي', '192.168.30.1', 'VLAN 30 - VoIP PBX', 30, 0, 'green', 13, 'شغال ومربوط على الشبكة'),
+('c3850-p14', 'cisco-switch-48', 14, 'Gi1/0/14', 'active', 'تليفون Grandstream GRP2614 تحويلة 101–102', 'voip_phone', 'مكتب الإدارة التقنية (غرفة 5)', '192.168.30.11', 'VLAN 30 - VoIP PBX', 30, 8.4, 'green', 14, 'تغذية PoE+ من السويتش'),
+('c3850-p15', 'cisco-switch-48', 15, 'Gi1/0/15', 'active', 'تليفونات Grandstream GRP2614 العمليات والكول سنتر', 'voip_phone', 'القاعة الكبرى وغرفة العمليات', '192.168.30.12', 'VLAN 30 - VoIP PBX', 30, 8.4, 'green', 15, 'تغذية PoE+ من السويتش'),
+('c3850-p17', 'cisco-switch-48', 17, 'Gi1/0/17', 'active', 'مسجل كاميرات Hikvision 16ch 4K NVR', 'server', 'راك U20 - غرفة السيرفرات', '192.168.20.100', 'VLAN 20 - CCTV', 20, 0, 'purple', 17, 'تغذية البث على VLAN 20 المعزولة'),
+('c3850-p25', 'cisco-switch-48', 25, 'Gi1/0/25', 'active', 'سيرفر Dell PowerEdge R640 (LACP Bond 1-4)', 'server', 'راك U24 - غرفة السيرفرات', '192.168.10.10', 'VLAN 50 - Core Servers', 50, 0, 'cyan', 17, 'منافذ 25-28 مجمعة 4Gbps'),
+('c3850-p29', 'cisco-switch-48', 29, 'Gi1/0/29', 'active', 'وحدة إدارة سيرفر ديل iDRAC9 Enterprise', 'server', 'راك U24 - منفذ الإدارة المستقل', '192.168.10.9', 'VLAN 99 - OOB Mgmt', 99, 0, 'red', 13, 'تحكم وإعادة تشغيل عن بعد'),
+('c3850-p30', 'cisco-switch-48', 30, 'Gi1/0/30', 'active', 'محطة/سيرفر HP Z440 (Proxmox VE)', 'server', 'راك U23 - بيئة الحاويات والنسخ', '192.168.10.20', 'VLAN 50 - Core Servers', 50, 0, 'cyan', 18, ''),
+('c3850-p33', 'cisco-switch-48', 33, 'Gi1/0/33', 'active', 'جدار الحماية والراوتر TP-Link ER8411 (LAN Trunk)', 'firewall', 'راك U18 - البوابة الأمنية المركزية', '192.168.10.1', 'All VLANs Trunk', 1, 0, 'yellow', NULL, 'يربط ER8411 بالسويتش لتمرير إنترنت WE ADSL + Vodafone 5G'),
+('c3850-p37', 'cisco-switch-48', 37, 'Gi1/0/37', 'active', 'أكسس بوينت واي فاي Ubiquiti UniFi AP', 'access_point', 'صالة الاستقبال والإدارة', '192.168.10.150', 'VLAN 40 - Wi-Fi & Guests', 40, 15.4, 'white', 21, 'تغذية PoE+'),
+('c3850-p45', 'cisco-switch-48', 45, 'Gi1/0/45', 'active', 'دائرة 4B المباشرة الأساسية (WE Fiber PRI-4821)', 'uplink', 'سنترال المعادي ↔ سحابة 4B', '10.10.40.10', 'VLAN 91 - 4B Core', 91, 0, 'cyan', NULL, 'اختبار < 5ms'),
+('c3850-p46', 'cisco-switch-48', 46, 'Gi1/0/46', 'standby', 'دائرة طوارئ 4B الاحتياطية (DR-4822)', 'uplink', 'مسار التحويل الفوري DR', '10.10.40.11', 'VLAN 92 - 4B DR', 92, 0, 'orange', NULL, 'Failover تلقائي'),
+('c3850-p48', 'cisco-switch-48', 48, 'Gi1/0/48', 'active', 'خط تجميع فايبر WE (24Mbps L3VPN Hub - PO 6078927)', 'uplink', 'المعادي ↔ القرية الذكية و6 محافظات', '10.50.10.1', 'VLAN 90 - WE L3VPN', 90, 0, 'cyan', NULL, 'توريد 4-6 أسابيع')
+ON CONFLICT (id) DO UPDATE SET
+    connected_device = EXCLUDED.connected_device,
+    ip_address = EXCLUDED.ip_address,
+    status = EXCLUDED.status,
+    notes = EXCLUDED.notes;
+
+-- 8. LEASED LINES & LIVE INTERNET CIRCUITS
+INSERT INTO public.meshawir_4b_leased_lines (id, circuit_reference, provider_name, service_type, bandwidth_mbps, source_endpoint, destination_endpoint, primary_gateway_ip, backup_gateway_ip, monthly_cost_egp, contract_ref, status, notes)
+VALUES
+('line-we-adsl-1', 'WE-ADSL-MAADI-LINE1', 'المصرية للاتصالات WE', 'Primary Landline ADSL (Line 1)', 30, 'الخط الأرضي رقم 1 بمقر المعادي', 'راوتر WE ADSL ← TP-Link ER8411 WAN1', '192.168.1.1', '192.168.10.1', 500.00, 'خط أرضي 1', 'active', 'تم تشغيله فعلياً وربطه على TP-Link ER8411'),
+('line-vf-5g-live', 'VF-5G-MAADI-WAN2', 'فودافون مصر (Vodafone 5G)', '5G Wireless High-Speed WAN', 100, 'راوتر Vodafone 5G بالمقر', 'TP-Link ER8411 WAN2', '192.168.8.1', '192.168.10.1', 750.00, 'فاتورة #748994 + باقة 5G', 'active', 'شغال فعلياً الآن مع TP-Link ER8411 لرفع السرعة والاستقرار'),
+('line-we-pstn-2', 'WE-PSTN-MAADI-LINE2', 'المصرية للاتصالات WE', 'Dedicated Voice Landline (Line 2)', 1, 'الخط الأرضي رقم 2 بمقر المعادي', 'منفذ FXO-1 بسنترال Grandstream 604A', 'FXO-1', 'FXS-1', 250.00, 'خط أرضي 2 للسنترال', 'active', 'تم تركيبه على سنترال Grandstream 604A فعلياً'),
+('line-4b-we-fiber', 'TE-CAI-4B-PRI-4821', 'المصرية للاتصالات WE', 'L3VPN Fiber 24Mbps + 6 Governorates (4Mbps ea)', 24, 'سنترال المعادي ↔ القرية الذكية', 'سويتش سيسكو Port 45/48 وER8411 WAN3', '10.10.40.10', '10.10.40.11', 30000.00, 'order#6078927 (360,000/yr)', 'active', 'توريد 4-6 أسابيع من 29/09/2026، وزمن تأخير مستهدف < 5ms')
+ON CONFLICT (id) DO UPDATE SET
+    status = EXCLUDED.status,
+    notes = EXCLUDED.notes;
+
+-- 9. ALL 16 CCTV CAMERAS
+INSERT INTO public.meshawir_cctv_cameras (id, camera_number, location_in_office, nvr_channel, ip_address, switch_port, has_audio_mic, status)
+VALUES
+('cam-01', 1, 'مدخل الشارع الرئيسي والباب الخارجي للمقر', 1, '192.168.20.11', 18, FALSE, 'online'),
+('cam-02', 2, 'منطقة الاستقبال والباب الداخلي الرئيسي (صوتية)', 2, '192.168.20.12', 18, TRUE, 'online'),
+('cam-03', 3, 'جهاز البصمة ZKTeco والممر الفاصل', 3, '192.168.20.13', 19, FALSE, 'online'),
+('cam-04', 4, 'مدخل ومحيط غرفة السيرفرات المصفحة (صوتية)', 4, '192.168.20.14', 19, TRUE, 'online'),
+('cam-05', 5, 'داخل غرفة السيرفرات مواجهة كابينة راك Perla 27U', 5, '192.168.20.15', 20, FALSE, 'online'),
+('cam-06', 6, 'القاعة المفتوحة للكول سنتر - الركن الأول', 6, '192.168.20.16', 20, FALSE, 'online'),
+('cam-07', 7, 'القاعة المفتوحة للكول سنتر - الركن الثاني', 7, '192.168.20.17', 21, FALSE, 'online'),
+('cam-08', 8, 'القاعة المفتوحة للكول سنتر - الركن الثالث', 8, '192.168.20.18', 21, FALSE, 'online'),
+('cam-09', 9, 'القاعة المفتوحة للكول سنتر - الركن الرابع', 9, '192.168.20.19', 22, FALSE, 'online'),
+('cam-10', 10, 'مكتب إدارة العمليات (م/ موفق وم/ عمرو - صوتية)', 10, '192.168.20.20', 22, TRUE, 'online'),
+('cam-11', 11, 'الممر الداخلي للغرف الإدارية والمالية', 11, '192.168.20.21', 23, FALSE, 'online'),
+('cam-12', 12, 'مكتب الإدارة المالية والحسابات ومكتب 5 (صوتية)', 12, '192.168.20.22', 23, TRUE, 'online'),
+('cam-13', 13, 'محيط مكتب البرمجة والجودة (غرفة 7)', 13, '192.168.20.23', 24, FALSE, 'online'),
+('cam-14', 14, 'منطقة الخدمات والمطبخ الصغير', 14, '192.168.20.24', 24, FALSE, 'online'),
+('cam-15', 15, 'محيط النوافذ والواجهة الرئيسية للمقر', 15, '192.168.20.25', 24, FALSE, 'online'),
+('cam-16', 16, 'نقطة الطابعة المركزية M404n والممر الخلفي', 16, '192.168.20.26', 24, FALSE, 'online')
+ON CONFLICT (id) DO UPDATE SET
+    location_in_office = EXCLUDED.location_in_office,
+    has_audio_mic = EXCLUDED.has_audio_mic;
+
+-- 10. GRANDSTREAM 604A EXTENSIONS (100 - 116)
+INSERT INTO public.meshawir_voip_extensions (id, extension_number, user_name, department, device_model, ip_address, switch_port, status)
+VALUES
+('ext-100', '100', 'الاستقبال والفاكس (الخط الأنالوج المباشر FXS-1)', 'الاستقبال', 'Analog Phone FXS-1', 'FXS-1', 13, 'active'),
+('ext-101', '101', 'المهندس عماد الشرقاوي (مدير الفرع)', 'الإدارة التقنية (مكتب 5)', 'Grandstream GRP2614', '192.168.30.11', 14, 'active'),
+('ext-102', '102', 'المهندس سامح يس (CTO)', 'الإدارة التقنية (مكتب 5)', 'Grandstream GRP2614', '192.168.30.12', 14, 'active'),
+('ext-103', '103', 'الأستاذ هاني (CFO)', 'الإدارة المالية', 'Grandstream GRP2614', '192.168.30.13', 15, 'active'),
+('ext-104', '104', 'الأستاذ محمد مصطفى', 'الشؤون القانونية', 'Grandstream GRP2614', '192.168.30.14', 15, 'active'),
+('ext-105', '105', 'م/ موفق (إدارة العمليات)', 'عمليات 4B', 'Grandstream GRP2614', '192.168.30.15', 15, 'active'),
+('ext-106', '106', 'م/ عمرو (إدارة الأساطيل)', 'عمليات 4B', 'Grandstream GRP2614', '192.168.30.16', 15, 'active'),
+('ext-107', '107', 'كول سنتر 1 - خدمة العملاء والركاب', 'خدمة العملاء', 'Grandstream GRP2614', '192.168.30.17', 16, 'active'),
+('ext-108', '108', 'كول سنتر 2 - دعم الكباتن', 'خدمة العملاء', 'Grandstream GRP2614', '192.168.30.18', 16, 'active'),
+('ext-109', '109', 'كول سنتر 3 - الشكاوى والمفقودات', 'خدمة العملاء', 'Grandstream GRP2614', '192.168.30.19', 16, 'active'),
+('ext-110', '110', 'كول سنتر 4 - متابعة الرحلات', 'خدمة العملاء', 'Grandstream GRP2614', '192.168.30.20', 16, 'active'),
+('ext-111', '111', 'كول سنتر 5 - طوارئ SOS والطرق', 'خدمة العملاء', 'Grandstream GRP2614', '192.168.30.21', 16, 'active')
+ON CONFLICT (id) DO UPDATE SET
+    user_name = EXCLUDED.user_name,
+    status = EXCLUDED.status;
+
+-- 11. OFFICIAL EMAILS (5 ACTIVE ZOHO LITE + CANCELLED HR) & DOMAINS
+INSERT INTO public.mashweer_emails (id, address, role_title, department, status, quota, assigned_to, webmail_url, notes)
+VALUES
+('email-admin', 'admin@mashweer.com.eg', 'الإدارة العامة والتحكم بالأنظمة', 'الإدارة التقنية', 'نشط ومفعل (مجاني)', '10 GB', 'المهندس عماد الشرقاوي والمهندس سامح يس', 'https://mail.zoho.com', 'البريد الرئيسي للإدارة والسحابة وGoogle Cloud وCloudinary'),
+('email-support', 'support@mashweer.com.eg', 'الدعم الفني وخدمة العملاء', 'خدمة العملاء', 'نشط ومفعل (مجاني)', '5 GB', 'م/ أحمد عبيد وفريق الكول سنتر', 'https://mail.zoho.com', 'شكاوى وبلاغات 4B ووكالة ودارو'),
+('email-info', 'info@mashweer.com.eg', 'المعلومات والاستفسارات العامة', 'الاستقبال والعلاقات', 'نشط ومفعل (مجاني)', '5 GB', 'أ/ سارة حسن والاستقبال', 'https://mail.zoho.com', 'الاستفسارات العامة والشركاء'),
+('email-operation', 'operation@mashweer.com.eg', 'إدارة العمليات والتشغيل', 'عمليات 4B والأسطول', 'نشط ومفعل (مجاني)', '5 GB', 'م/ موفق وم/ عمرو', 'https://mail.zoho.com', 'إدارة الكباتن ودارو ووكالة'),
+('email-finance', 'finance@mashweer.com.eg', 'الإدارة المالية والحسابات', 'المالية', 'نشط ومفعل (مجاني)', '5 GB', 'الأستاذ هاني (CFO)', 'https://mail.zoho.com', 'الفواتير الضريبية وعقود فوري'),
+('email-hr', 'hr@mashweer.com.eg', 'الموارد البشرية والتوظيف', 'HR', 'ملغي ومستبعد', '0 GB', 'أ/ سارة حسن (مستبعد توفيراً للرسوم)', 'https://mail.zoho.com', 'تم إلغاؤه بقرار م/ سامح يس للاكتفاء بالـ 5 حسابات المجانية على زوهو')
+ON CONFLICT (id) DO UPDATE SET
+    assigned_to = EXCLUDED.assigned_to,
+    status = EXCLUDED.status;
+
+INSERT INTO public.meshawir_domains (id, domain_name, registrar, expiry_date, associated_project_id, status, notes)
+VALUES
+('dom-mashawer', 'mashawer.com.eg', 'المصرية لتكنولوجيا المعلومات EC (م/ محمد الحلو)', '2027-08-09', 'proj-maadi-hq', 'active', 'النطاق الرسمي المسجل والمستضاف على Host1 حتى 11/08/2027؛ مقترح تجديده لسنتين'),
+('dom-4b', 'admin.4b.com.eg', 'نطاق تشغيل لوحة 4B', '2027-08-09', 'proj-4b', 'active', 'لوحة تحكم عمليات تطبيق فور بي'),
+('dom-wikala', 'wikala.com.eg', 'جاري التسجيل الرسمي بالملكية الفكرية', '2027-09-01', 'proj-wekala', 'pending_registration', 'يتطلب شهادة المنشأ والسجل التجاري'),
+('dom-daro', 'daro.eg', 'نطاق تطبيق دارو اللوجستي', '2027-09-01', 'proj-daro', 'pending_registration', 'بانتظار استيفاء مستندات التسجيل')
+ON CONFLICT (id) DO UPDATE SET status = EXCLUDED.status;
+
+-- 12. ALL ETA TAX INVOICES & FORMAL QUOTATIONS (12 ITEMS)
+INSERT INTO public.meshawir_quotations (id, provider_id, quote_number, title, submission_date, subtotal_egp, vat_egp, total_egp, is_tax_invoice, eta_uuid, status)
+VALUES
+('qt-qts-1169', 'prov-qts-servers', '#1169', 'فاتورة QTS الضريبية: سيرفر Dell R640 + محطتي HP Z440', '2026-09-26', 84470.00, 11825.80, 96295.80, TRUE, '7ZYZDKGHRVSDN70R4SP81F3M10', 'مدفوعة ومعتمدة ETA'),
+('qt-qts-1172', 'prov-qts-servers', '#1172', 'فاتورة QTS الضريبية: سويتش سيسكو Catalyst 3850-48P PoE+', '2026-09-28', 10500.00, 1470.00, 11970.00, TRUE, 'K1G9T4WV39B521M0EYV8EM3M10', 'مدفوعة ومعتمدة ETA'),
+('qt-techno-dokki', 'prov-qts-servers', '#1660751017094', 'فاتورة تكنو ستورز الدقي: 3x Dell i5 الجيل 10 + 3x شاشات HP 22" + ملحقات', '2026-06-09', 35001.00, 4900.14, 39901.14, TRUE, '2YMG3N8EF4WVMEB3V67G7PTK10', 'مدفوعة ومعتمدة ETA'),
+('qt-redline-15947', 'prov-redline', '#15947', 'فاتورة رد لاين البستان: راك Perla 27U + I-Pook PK65H + أدوات شبكة', '2026-03-29', 16271.93, 2278.07, 18550.00, TRUE, '6T3HM2FA86TEDZEBQHYPFWMK10', 'مدفوعة ومعتمدة ETA'),
+('qt-menshawy-1096', 'prov-redline', '#001096', 'إذن المنشاوي البستان المؤقت: هاردات HP SAS 1.2TB/2TB وكابلات (بانتظار فاتورة ETA)', '2026-09-28', 8510.00, 0.00, 8510.00, FALSE, NULL, 'مدفوعة نقداً - مطلوب فاتورة ضريبية ومراجعة الحساب'),
+('qt-vodafone-748994', 'prov-vodafone-5g', '#748994', 'فاتورة فودافون صقر قريش: راوتر H153-381 + شريحة + باقة 520', '2026-09-28', 2917.95, 408.51, 3326.46, TRUE, NULL, 'مدفوعة'),
+('qt-raneen-40', 'prov-redline', '#40-0217871', 'فاتورة طيبة رنين الفسطاط: سلم 6 درجات + 4 كراسي راتان + طاولة', '2026-03-26', 2588.60, 362.40, 2951.00, TRUE, '34GAMWHCFDFNTGX5QWDGJ8PK10', 'مدفوعة ومعتمدة ETA'),
+('qt-ec-host1', 'prov-ec-egypt', '#1331', 'فاتورة EC استضافة Host1 لموقع mashawer.com.eg حتى 10/08/2027', '2026-08-11', 2200.00, 308.00, 2508.00, TRUE, NULL, 'مدفوعة حتى 2027'),
+('qt-ec-domain', 'prov-ec-egypt', '#1325', 'فاتورة EC تسجيل دومين mashawer.com.eg حتى 08/08/2027', '2026-08-09', 1100.00, 154.00, 1254.00, TRUE, NULL, 'مدفوعة حتى 2027'),
+('qt-friends-cctv', 'prov-friends-cctv', 'PO-FRIENDS-55050', 'عرض الأصدقاء (م/ علي) لكاميرات مقر المعادي + NVR 4K + 4TB Purple', '2026-09-24', 55050.00, 0.00, 55050.00, FALSE, NULL, 'معتمد وقيد التعديل/التسوية النهائية (2MP vs 5MP)'),
+('qt-we-l3vpn', 'prov-we-telecom', 'order#6078927', 'أمر شراء WE: فايبر 24Mbps للمقر + 6 خطوط محافظات 4Mbps (سنوي)', '2026-09-29', 360000.00, 0.00, 360000.00, FALSE, NULL, 'معتمد (90,000 كل ربع سنة)'),
+('qt-we-cloud-waf', 'prov-we-telecom', 'order#6078933', 'أمر شراء WE: 3 خوادم 4B + 20Mbps + F5 WAF + 7 SSL VPN + باك أب 30 يوم (سنوي)', '2026-09-29', 807496.00, 0.00, 807496.00, FALSE, NULL, 'معتمد (201,874 كل ربع سنة)')
+ON CONFLICT (id) DO UPDATE SET
+    total_egp = EXCLUDED.total_egp,
+    status = EXCLUDED.status;
+
+-- 13. FACILITY ZONES (MAADI HQ ARCHITECTURAL FLOORPLAN)
+INSERT INTO public.meshawir_facility_zones (id, zone_name, allocated_purpose, dimensions_text, capacity_people, workstation_ports_count, cctv_cameras_count, assigned_staff, notes)
+VALUES
+('zone-open-hall', 'القاعة الكبرى المفتوحة (Open Hall)', 'صالة الكول سنتر وخدمة العملاء والعمليات', '9.60م × 12.28م', 17, 17, 4, 'فريق الكول سنتر (5 الآن ← 17 مستقبلاً) + محلل البيانات', 'توصيل سلكي 100% Cat6 بدون الاعتماد على Wi-Fi'),
+('zone-server-room', 'غرفة السيرفرات المصفحة (Server Room)', 'حاضنة راك Perla 27U والاتصالات والسنترال', '5.74م × 1.96م', 2, 4, 2, 'المهندس عماد الشرقاوي والمهندس سامح يس', 'باب مصفح + تكييف 24/7 + كاميرا داخلية وأخرى خارجية'),
+('zone-room-1', 'الغرفة رقم 1', 'مكتب إداري مزدوج / قيادة تشغيلية', 'مكتب قياسي', 2, 2, 0, 'قيادة الإدارة / التشغيل', 'مخارج شبكة مزدوجة'),
+('zone-room-2', 'الغرفة رقم 2', 'مكتب الإدارة المالية (CFO)', 'مكتب قياسي', 2, 2, 1, 'الأستاذ هاني', 'توصيلات شبكة سلكية مستقلة'),
+('zone-room-3', 'الغرفة رقم 3', 'غرفة عمليات 4B والمشرفين', 'مكتب قياسي', 2, 2, 1, 'م/ موفق وم/ عمرو', 'متابعة الأسطول والحملات'),
+('zone-room-4', 'الغرفة رقم 4', 'مكتب الشؤون القانونية أو الاجتماعات المغلقة', 'مكتب قياسي', 4, 2, 0, 'أ/ محمد مصطفى / اجتماعات', ''),
+('zone-room-5', 'الغرفة رقم 5 (مكتب التقنية CTO)', 'مكتب المهندس عماد الشرقاوي والمهندس سامح يس + الطابعة M404n + محطة Z440 #2', 'مكتب قياسي', 2, 4, 1, 'المهندس عماد الشرقاوي والمهندس سامح يس', 'مربوطة بطابعة HP M404n على منفذ السيسكو Gi1/0/7'),
+('zone-room-6', 'الغرفة رقم 6', 'مكتب الموارد البشرية والشؤون الإدارية', 'مكتب قياسي', 2, 2, 0, 'أ/ سارة حسن', 'حفظ ملفات الموظفين وعقودهم'),
+('zone-room-7', 'الغرفة رقم 7', 'مكتب البرمجة وضمان الجودة (QA)', 'مكتب قياسي', 3, 3, 1, 'م/ علي (QA) وم/ أحمد عبيد ومهندسون جدد', 'اختبار تطبيقات 4B ووكالة ودارو'),
+('zone-reception-wc', 'الاستقبال والمدخل + دورتي المياه 1 و 2', 'الاستقبال، جهاز البصمة ZKTeco، وتليفون 100', 'مدخل رئيسي + حمامان', 4, 2, 2, 'الاستقبال والأمن', 'كاميرا صوتية على المدخل والاستقبال')
+ON CONFLICT (id) DO UPDATE SET allocated_purpose = EXCLUDED.allocated_purpose, assigned_staff = EXCLUDED.assigned_staff;
+
+-- 14. HARDWARE INVENTORY (UPDATED)
+INSERT INTO public.hardware_inventory (id, name, role, specs, location, invoice_ref, vendor, status)
+VALUES
+('hw-tplink-er8411', 'TP-Link ER8411 Router & Firewall', 'راوتر وجدار حماية رئيسي Multi-WAN', '10G SFP+ & Gigabit Multi-WAN (WE ADSL + Vodafone 5G) + VPN + VLAN Firewall', 'راك Perla 27U (U18)', 'مشتريات مباشرة جديدة', 'TP-Link', 'تم الشراء والتشغيل الفعلي الآن'),
+('hw-grandstream-604a', 'Grandstream UCM6304A ("604A") IP PBX', 'سنترال المقر الذكي + عِدد GRP2614', '4 FXO (الخط الأرضي الثاني) + 4 FXS + SIP + شاشة LCD + تسجيل مكالمات', 'راك Perla 27U (U19)', 'توريد السنترال والعِدد', 'Grandstream', 'تم الشراء والتركيب والتشغيل الفعلي'),
+('hw-dell-r640', 'Dell PowerEdge R640 Platinum', 'خادم الإنتاج والنسخ الاحتياطي المحلي', '2x Xeon Platinum 8160 (48C/96T) • 64GB ECC • 2x256GB SSD + 3x1.2TB SAS', 'راك Perla 27U (U24)', 'ETA #1169 (54,000 ج.م)', 'QTS Servers', 'مورد ومثبت بالراك'),
+('hw-z440-1', 'HP Workstation Z440 #1', 'خادم Proxmox وDocker وخزنة الباك أب', 'Xeon E5-2697 v4 (18C) • 64GB ECC • 2x1TB NVMe + 4TB HDD', 'راك Perla 27U (U23)', 'ETA #1169 (15,235 ج.م)', 'QTS Servers', 'مورد ومثبت بالراك'),
+('hw-z440-2', 'HP Workstation Z440 #2', 'محطة المراقبة والتطوير (3 شاشات HP)', 'Xeon E5-2697 v4 • 16GB RAM • 3x HP 22" Monitors', 'مكتب 5 (غرفة التقنية)', 'ETA #1169 (15,235 ج.م)', 'QTS Servers', 'جاهز وشغال بمكتب 5'),
+('hw-cisco-3850', 'Cisco Catalyst 3850-48P PoE+', 'السويتش المركزي للمقر', '48x 1G PoE+ • Dual 715W PSU • 4x 10G SFP+', 'راك Perla 27U (U26)', 'ETA #1172 (11,970 ج.م)', 'QTS Servers', 'مورد ومثبت بالراك'),
+('hw-dell-optiplex-3', '3x Dell OptiPlex Core i5 (Gen 10)', 'محطات عمل العمليات والتحليل (مبدئياً)', 'Core i5 10th Gen + 3x HP 22" Webcam Monitors', 'غرفة العمليات + مكتب المحلل', 'ETA #1660751017094 (39,901 ج.م)', 'تكنو ستورز الدقي', 'مشغلة وموزعة (ومطلوب +5 أجهزة الآن)'),
+('hw-printer-m404n', 'HP LaserJet Pro M404n', 'طابعة الليزر الشبكية المركزية', 'شبكية على المنفذ Gi1/0/7 (192.168.10.45)', 'مكتب 5', 'أصول المقر', 'HP', 'نشطة على الشبكة')
+ON CONFLICT (id) DO UPDATE SET status = EXCLUDED.status, specs = EXCLUDED.specs;
+
+-- 15. LEGAL DOSSIERS & SUBSIDIARY PROPOSAL & KAGGLE RESEARCH
+INSERT INTO public.meshawir_legal_dossiers (id, dossier_title, authority_name, case_reference, status, action_required)
+VALUES
+('leg-1-valuetech', 'ملف تسوية/إنذار شركة قيمة تك وحماية السورس كود وKeystore', 'القضاء المدني / تسوية تعاقدية', 'خطة 7 أسابيع أو إنذار على يد محضر', 'عاجل وقيد الحسم', 'ربط كل دفعة بتسليم السورس كود الفعلي ومفاتيح التوقيع'),
+('leg-2-ltra', 'ملف ترخيص النقل الذكي والربط المباشر وفق قانون 87/2018 وقرار 2180/2019', 'جهاز تنظيم النقل البري (LTRA)', 'خطاب م/ ضياء الدين يوسف (24/05/2026)', 'نشط ومستمر', 'استكمال الربط الإلكتروني عبر خوادم WE والالتزام بالمعايير'),
+('leg-3-ip-itida', 'حماية الملكية الفكرية وإيداع البرمجيات والعلامات التجارية', 'هيئة ITIDA والسجل التجاري والشهر العقاري', 'حماية تطبيقات 4B ووكالة ودارو', 'قيد التجهيز', 'استخراج شهادات الإيداع وإثبات التاريخ وإتمام رقم DUNS للمتاجر'),
+('leg-4-hr-contracts', 'عقود الموظفين وإقرارات السرية NDA وعهدة الأجهزة والخطوط الرسمية', 'الشؤون القانونية والاتصالات', 'خطوط المحمول والأرضي للمقر', 'جاري التنفيذ', 'توثيق عقود الكول سنتر وعهدة الأجهزة واستكمال ملفات المحمول والأرضي')
+ON CONFLICT (id) DO UPDATE SET status = EXCLUDED.status;
+
+INSERT INTO public.meshawir_subsidiary_proposals (id, proposal_title, recipient_investor, proposed_by, strategic_objectives, corporate_structure, status)
+VALUES
+('sub-abu-khaled-1', 'مقترح تأسيس الشركة التابعة التكنولوجية خارج القاهرة (مملوكة لأبو خالد)', 'أبو خالد', 'المهندس سامح يس',
+'["1- فصل المخاطر وحماية أصول البرمجيات","2- بناء ذراع تطوير داخلي يغني عن المطورين الخارجيين","3- تقديم خدمات التحول الرقمي والأمن السيبراني","4- إدارة أساطيل ومكاتب المحافظات خارج القاهرة","5- احتضان الملكية الفكرية وبراءات الاختراع بـ ITIDA","6- تصدير البرمجيات للخليج وأوروبا ولندن","7- التعاقدات الحكومية ومناقصات البنية التحتية","8- توحيد توريدات العتاد والكاميرات للمجموعة","9- تأسيس أكاديمية تدريب وتأهيل هندسي","10- مظلة استثمارية مرنة لجذب الشركاء مستقبلاً"]'::jsonb,
+'{"internal_engineers": 4, "senior_consultants": 2, "note": "بانتظار حسم الاسم التجاري ونسب الشراكة مع أبو خالد والمحامي"}'::jsonb,
+'قيد الدراسة مع أبو خالد والمحامي')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO public.meshawir_kaggle_research (id, paper_title, deadline_date, primary_author, abstract_text, framework_model, submission_status)
+VALUES
+('kag-white-lion', 'The White Lion & UCP-LLM: Epistemic Engineering Constraints for Local Gemma 4 Agents (Kaggle $100k)', '2026-10-17', 'المهندس سامح يس',
+'دمج التفسير الرمزي والانضباط اللغوي مع هندسة القيود الرقمية الصارمة عبر 25 قسماً في بروتوكول UCP-LLM (20 شخصياً/فروسية/هدوء/مسرح + 5 تقنياً)، مع حالة دراسية هندسية تحقق وفورات 80–120 ألف ج.م سنوياً، وأداة Eve v1.1.0.',
+'Gemma 4 LoRA/Unsloth + UCP-LLM + Eve v1.1.0', 'خطة 17 يوماً حتى 17 أكتوبر (عيد ميلاد م/ سامح يس 18 أكتوبر)')
+ON CONFLICT (id) DO UPDATE SET primary_author = EXCLUDED.primary_author;
+
+-- 16. KEY INTERACTIVE PROJECT TASKS (CONSOLIDATED ACROSS ALL WORKSTREAMS)
+INSERT INTO public.project_tasks (id, task_number, project_id, category, title, description, priority, status, assigned_to, is_emad_key_task, is_sameh_software_task, is_mowaffaq_ops_task, is_lawyer_task)
+VALUES
+('t-01', 1, 'proj-maadi-hq', 'تسليم إدارة الفرع للمهندس عماد', 'استلام إدارة فرع المعادي كاملة (الصلاحيات، 2FA، الباسوردات عبر الخزنة المشفرة، ومفاتيح الغرفة والراك)', 'نقل ملكية/صلاحيات إدارة WE وEC وZoho وGitHub وSupabase وTP-Link ER8411 وGrandstream 604A ليكون م/ عماد مستقلاً تماماً.', 'عاجلة جداً', 'in_progress', 'المهندس عماد الشرقاوي والمهندس سامح يس', TRUE, TRUE, FALSE, FALSE),
+('t-02', 2, 'proj-maadi-hq', 'الشبكات والفايروول الجديد', 'اعتماد توثيق وضبط سياسات TP-Link ER8411 المشتَرى فعلياً (دمج خط أرضي 1 WE ADSL + Vodafone 5G + عزل VLANs)', 'تأكيد قواعد التوجيه والـ Failover وتجهيز المنفذ الثالث لوصول خط فايبر WE L3VPN.', 'عاجلة جداً', 'completed', 'المهندس عماد الشرقاوي والمهندس سامح يس', TRUE, FALSE, FALSE, FALSE),
+('t-03', 3, 'proj-maadi-hq', 'السنترال الجراند ستريم 604A', 'إتمام إعدادات التحويلات (100-116)، رسالة IVR، طابور الكول سنتر، وتسجيل المكالمات على Grandstream 604A', 'السنترال راكب وشغال مع الخط الأرضي الثاني؛ مطلوب إغلاق تذكرة MSH-IT-2026-084 وأخذ نسخة Backup.', 'عاجلة جداً', 'in_progress', 'المهندس عماد الشرقاوي وم/ موفق', TRUE, FALSE, TRUE, FALSE),
+('t-04', 4, 'proj-maadi-hq', 'عتاد واستكمال غرفة السيرفرات', 'شراء UPS 1500VA وتكييف 24/7 لغرفة السيرفرات + طفاية حريق غازية + 5 أجهزة Dell إضافية للكول سنتر', 'استكمال أمان الغرفة وتشغيل 8 مقاعد فورية في القاعة الكبرى ثم التوسع إلى 17.', 'عاجلة جداً', 'pending', 'المهندس عماد الشرقاوي والأستاذ هاني', TRUE, FALSE, FALSE, FALSE),
+('t-05', 5, 'proj-maadi-hq', 'تمديدات المقر والكاميرات', 'إنهاء تأريج نقاط القاعة الـ 17 مع حاتم الفني، وإنهاء تركيب 16 كاميرا 5MP (منها 4 صوتية) مع م/ علي', 'ربط الكاميرات على VLAN 20 وتفعيل Hik-Connect للقيادات.', 'عاجلة جداً', 'in_progress', 'المهندس عماد الشرقاوي وحاتم وم/ علي', TRUE, FALSE, FALSE, FALSE),
+('t-06', 6, 'proj-maadi-hq', 'الشؤون المالية والفواتير', 'تحويل إذن المنشاوي النقدي المؤقت (8,510 ج.م) لفاتورة ضريبية ETA واستخراج فيزا الشركة الرسمية', 'إقفال العهدة ومراجعة فرق البنود وتجديد نطاق mashawer.com.eg لسنتين.', 'عالية', 'in_progress', 'الأستاذ هاني والمهندس سامح يس', FALSE, TRUE, FALSE, FALSE),
+('t-07', 7, 'proj-4b', 'استضافة WE والـ VPN والتراخيص', 'استلام الـ 3 خوادم السحابية + F5 WAF + 7 حسابات SSL VPN + فايبر 24Mbps + ربط LTRA وتجربة الفشل DR (< 5ms)', 'تنسيق مباشر مع م/ أحمد محرم وم/ أحمد غريب في WE والمحامي أ/ محمد مصطفى.', 'عاجلة جداً', 'in_progress', 'المهندس عماد الشرقاوي وم/ أحمد محرم والمحامي', TRUE, FALSE, FALSE, TRUE),
+('t-08', 8, 'proj-4b', 'إغلاق الثغرات البرمجية لـ 4B', 'إلزام قيمة تك بإدارة حالة الرحلة والسعر من السيرفر، مؤقت 60ث للـ OTP، انتهاء عرض المزايدة خلال 15ث، وتأمين Webhook فوري', 'بالإضافة لإصلاحات FCM OAuth2 وخريطة Google Maps للأدمن وطوابير BullMQ ونشر CompreFace محلياً.', 'عاجلة جداً', 'in_progress', 'المهندس سامح يس وم/ علي QA وقيمة تك', FALSE, TRUE, FALSE, FALSE),
+('t-09', 9, 'proj-daro', 'تطوير وتشغيل تطبيق دارو Daro', 'استكمال شاشات فيجما الـ 30% المتبقية + باركود Code128/QR بـ 3 نقاط مسح + محفظة COD + حسم أجهزة Handheld مقابل ML Kit', 'وتجهيز ملف دراسة التوسع المستقبلي لمشروع دارو لندن.', 'عالية', 'in_progress', 'المهندس سامح يس وأبو خالد وقيمة تك', FALSE, TRUE, TRUE, FALSE),
+('t-10', 10, 'proj-wekala', 'استكمال وكالة WeKaLa', 'استلام سورس كود Flutter ومفاتيح Keystore وتأمين شهادة المنشأ لتسجيل wikala.com.eg', 'ربط خطوط فروع المحافظات الستة 4Mbps عند تشغيل الوكلاء.', 'عالية', 'pending', 'المهندس سامح يس والمحامي', FALSE, TRUE, FALSE, TRUE),
+('t-11', 11, 'proj-maadi-hq', 'خزنة النسخ الاحتياطي الليلي', 'برمجة سحب نسخة ليلية تلقائية الساعة 3:00 ص من سحابة WE وGitHub إلى R640 / Z440 محلياً بالمعادي', 'مع نسخة أسبوعية احتياطية إضافية وإلغاء Active Directory المحلي نهائياً.', 'عالية', 'pending', 'المهندس عماد الشرقاوي والمهندس سامح يس', TRUE, TRUE, FALSE, FALSE),
+('t-12', 12, 'proj-agouza-restaurant', 'توريدات مطعم العجوزة', 'اعتماد وتركيب نظام POS الكاشير والطابعات و14 كاميرا مراقبة بمطعم العجوزة عبر م/ علي الأصدقاء', 'بإشراف الأستاذ هاني وأبو خالد مع فصل الحسابات تماماً عن مشاوير.', 'متوسطة', 'in_progress', 'الأستاذ هاني وأبو خالد وم/ علي', FALSE, FALSE, FALSE, FALSE),
+('t-13', 13, 'proj-kaggle-ucp', 'تسليم مسابقة كاجل ($100k)', 'إنهاء تجارب Gemma 4 LoRA/Unsloth والورقة البحثية The White Lion وبروتوكول UCP-LLM قبل 17 أكتوبر', 'مع الحفاظ على نسخ محلية منظمة وعدم تداخلها مع بيئة مشاوير.', 'عاجلة جداً', 'in_progress', 'المهندس سامح يس', FALSE, TRUE, FALSE, FALSE)
+ON CONFLICT (id) DO UPDATE SET
+    title = EXCLUDED.title,
+    description = EXCLUDED.description,
+    status = EXCLUDED.status,
+    assigned_to = EXCLUDED.assigned_to;
+
+-- 17. GENERAL LEDGER SUMMARY
+INSERT INTO public.meshawir_general_ledger (id, item_number, category, title, detail, amount_egp, invoice_ref, status, date_recorded)
+VALUES
+('gl-01', 1, 'servers_hw', 'فاتورة QTS #1169 (R640 + 2x Z440)', 'سيرفر ديل بلاتينيوم + محطتا عمل HP Z440 شاملة الضريبة', 96295.80, '7ZYZDKGHRVSDN70R4SP81F3M10', 'مدفوعة', '2026-09-26'),
+('gl-02', 2, 'network_hw', 'فاتورة QTS #1172 (Cisco 3850 48P)', 'سويتش سيسكو 48 منفذ PoE+ بباور مزدوج شاملة الضريبة', 11970.00, 'K1G9T4WV39B521M0EYV8EM3M10', 'مدفوعة', '2026-09-28'),
+('gl-03', 3, 'workstations', 'فاتورة تكنو ستورز الدقي', '3 أجهزة Dell i5 الجيل 10 + 3 شاشات HP بكاميرا + ملحقات', 39901.14, '2YMG3N8EF4WVMEB3V67G7PTK10', 'مدفوعة', '2026-06-09'),
+('gl-04', 4, 'rack_cabling', 'فاتورة رد لاين البستان #15947', 'راك بيرلا 27U عمق 1000 + I-Pook PK65H + أدوات كبس', 18550.00, '6T3HM2FA86TEDZEBQHYPFWMK10', 'مدفوعة', '2026-03-29'),
+('gl-05', 5, 'storage_cables', 'إذن المنشاوي النقدي #001096 (مؤقت)', 'هاردات HP SAS 1.2TB/2TB وكابلات (بانتظار تحويله لفاتورة ضريبية)', 8510.00, '#001096', 'مدفوعة - مؤقتة', '2026-09-28'),
+('gl-06', 6, 'telecom', 'فاتورة فودافون صقر قريش #748994', 'راوتر H153-381 + شريحة + باقة 520 ج.م', 3326.46, '#748994', 'مدفوعة', '2026-09-28'),
+('gl-07', 7, 'furniture', 'فاتورة طيبة رنين الفسطاط', 'سلم 6 درجات + 4 كراسي راتان + طاولة', 2951.00, '34GAMWHCFDFNTGX5QWDGJ8PK10', 'مدفوعة', '2026-03-26'),
+('gl-08', 8, 'domains_hosting', 'فواتير EC (#1331 و #1325)', 'استضافة Host1 (2,508 ج.م) + دومين mashawer.com.eg (1,254 ج.م)', 3762.00, 'TX-43672852285', 'مدفوعة حتى 2027', '2026-08-11'),
+('gl-09', 9, 'cctv', 'عرض الأصدقاء (كاميرات المعادي)', '16 كاميرا Hikvision + NVR 4K + 4TB Purple + تمديدات', 55050.00, 'PO-FRIENDS-55050', 'معتمد وقيد التعديل', '2026-09-24'),
+('gl-10', 10, 'we_telecom', 'أمر شراء WE L3VPN (order#6078927)', 'فايبر 24Mbps للمقر + 6 فروع محافظات 4Mbps (سنوي)', 360000.00, 'order#6078927', 'معتمد وموقع', '2026-09-29'),
+('gl-11', 11, 'we_cloud', 'أمر شراء WE Cloud & WAF (order#6078933)', '3 خوادم 4B + 20Mbps + F5 WAF + 7 SSL VPN + باك أب 30 يوم (سنوي)', 807496.00, 'order#6078933', 'معتمد وموقع', '2026-09-29')
+ON CONFLICT (id) DO UPDATE SET amount_egp = EXCLUDED.amount_egp, status = EXCLUDED.status;
+
+-- 18. STRATEGIC SYSTEM INQUIRIES (KEY DECISIONS & OPEN QUESTIONS)
+INSERT INTO public.system_inquiries (id, question, context, category, urgency, options, answered, answer)
+VALUES
+('inq-01', 'ما هي خطة دمج TP-Link ER8411 مع جدار الحماية الافتراضي OPNsense؟', 'تم شراء وتشغيل TP-Link ER8411 فعلياً ليدير WE ADSL + Vodafone 5G كراوتر وفايروول', 'الشبكات والأمان', 'high', '["ER8411 كواجهة أساسية + OPNsense للفصل الداخلي","الاكتفاء بـ ER8411 كاملاً وتوفير موارد Z440"]'::jsonb, TRUE, 'ER8411 يعمل فعلياً كراوتر وفايروول أساسي لـ WAN1 (WE ADSL) وWAN2 (Vodafone 5G)، ويبقى OPNsense كخيار مساند/مختبر على Z440'),
+('inq-02', 'كيف نغلق فجوات 4B قبل الإطلاق التجاري؟', 'نتائج فحص التسليم البرمجي لتطبيق 4B Passenger & Driver', 'تطبيق 4B', 'critical', '["تغطية FCM OAuth2 + Google Maps في الأدمن + BullMQ + NestJS 11 + CompreFace","التأجيل لما بعد الإطلاق"]'::jsonb, FALSE, NULL),
+('inq-03', 'آلية مسح الباركود في محطات تطبيق دارو (Daro)', 'الاختيار بين كاميرا الهاتف بـ Google ML Kit أو أجهزة Handheld', 'تطبيق دارو', 'medium', '["Google ML Kit على هواتف المناديب مجاناً كبداية","شراء أجهزة Handheld ليزر للمستودعات"]'::jsonb, FALSE, NULL),
+('inq-04', 'تحديد الإجراء القانوني مع شركة قيمة تك في حال التأخير', 'رغم وجود خطة الـ 7 أسابيع M1-M5', 'قانوني وتعاقدات', 'critical', '["توجيه إنذار رسمي على يد محضر","ملحق تسوية وجدولة مرتبط باستلام السورس والـ Keystore"]'::jsonb, FALSE, NULL),
+('inq-05', 'حسم الترقية النهائية لكاميرات المعادي من 2MP إلى 5MP (16 كاميرا)', 'عرض الأصدقاء الأولي 55,050 ج.م (14 كاميرا 2MP) مقابل التغطية بـ 16 كاميرا 5MP و4 صوتية', 'كاميرات المراقبة', 'high', '["اعتماد 16 كاميرا 5MP و4 صوتية","الالتزام بعرض 14 كاميرا 2MP"]'::jsonb, TRUE, 'مخطط التغطية بـ 16 كاميرا 5MP منها 4 صوتية على VLAN 20')
+ON CONFLICT (id) DO UPDATE SET answered = EXCLUDED.answered, answer = EXCLUDED.answer;
+
+-- 19. DISABLE RLS FOR SMOOTH SETUP IMPORT (يمكن تفعيلها لاحقاً للإنتاج)
+ALTER TABLE public.meshawir_enterprises DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.projects DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.meshawir_project_milestones DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.meshawir_team_profiles DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.service_providers DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.meshawir_quotations DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.meshawir_server_racks DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.meshawir_rack_devices DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.meshawir_rack_ports DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.meshawir_4b_leased_lines DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.meshawir_cctv_cameras DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.meshawir_voip_extensions DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.mashweer_emails DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.meshawir_domains DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.project_tasks DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.meshawir_facility_zones DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.hardware_inventory DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.meshawir_legal_dossiers DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.meshawir_subsidiary_proposals DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.meshawir_general_ledger DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.system_inquiries DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.meshawir_kaggle_research DISABLE ROW LEVEL SECURITY;
+ملخص التنفيذ للذكاء الاصطناعي المستقبِل:
+نفّذ كود الـ SQL أعلاه أو قارن كل INSERT بما هو موجود لديك في الجداول وأضف الناقص وحدّث الموجود (خصوصاً أجهزة TP-Link ER8411 و**Grandstream 604A** وخطي الأرضي + Vodafone 5G، واسم سامح يس، وتفاصيل 4B و**Daro** الكاملة).
+ابنِ واجهة الراك التفاعلي الرسومية (Interactive Graphic Rack) مرتبطة مباشرة بجدولي meshawir_rack_devices وmeshawir_rack_ports بالترتيب الفيزيائي المذكور في القسم الأول من هذه المذكرة.
