@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Plus, Search, Download, Pencil, Trash2, ArrowUpDown, RefreshCw, AlertTriangle } from 'lucide-react';
 import {
-  daysLeft,
-  exportRowsToCsv,
-  formatMoney,
-  getDueStatus,
-  getSupabaseClient,
-} from '../lib/supabase';
+  deleteTableRow,
+  insertTableRow,
+  listAppsRef,
+  listTableRows,
+  updateTableRow,
+} from '../lib/dataService';
+import { daysLeft, exportRowsToCsv, formatMoney, getDueStatus } from '../lib/supabase';
 import type { AnyRecord, FieldDef, TableDef } from '../types/crm';
 import { RecordModal } from './RecordModal';
 
@@ -32,16 +33,13 @@ export const DataGridView: React.FC<DataGridViewProps> = ({ table }) => {
     setLoading(true);
     setError(null);
     try {
-      const sb = getSupabaseClient();
       const needsApps = table.fields.some((f) => f.type === 'ref');
-      const [rowsRes, appsRes] = await Promise.all([
-        sb.from(table.id).select('*').order('created_at'),
-        needsApps ? sb.from('apps').select('id,name').order('name') : Promise.resolve({ data: [], error: null }),
+      const [rowsData, appsData] = await Promise.all([
+        listTableRows(table.id),
+        needsApps ? listAppsRef() : Promise.resolve([]),
       ]);
-      if (rowsRes.error) throw rowsRes.error;
-      if (appsRes.error) throw appsRes.error;
-      setRows((rowsRes.data as AnyRecord[]) || []);
-      setAppsRef((appsRes.data as Array<{ id: string; name: string }>) || []);
+      setRows(rowsData);
+      setAppsRef(appsData);
     } catch (err: any) {
       setError(err?.message || `تعذر تحميل جدول ${table.name}`);
     } finally {
@@ -114,24 +112,22 @@ export const DataGridView: React.FC<DataGridViewProps> = ({ table }) => {
   };
 
   const handleSave = async (payload: Record<string, any>, existingId?: string) => {
-    const sb = getSupabaseClient();
-    const q = existingId
-      ? sb.from(table.id).update(payload).eq('id', existingId)
-      : sb.from(table.id).insert(payload);
-    const { error: saveErr } = await q;
-    if (saveErr) throw saveErr;
+    if (existingId) {
+      await updateTableRow(table.id, existingId, payload);
+    } else {
+      await insertTableRow(table.id, payload);
+    }
     await fetchTable();
   };
 
   const handleDelete = async (id: string) => {
-    const sb = getSupabaseClient();
-    const { error: delErr } = await sb.from(table.id).delete().eq('id', id);
-    if (delErr) {
-      setError(delErr.message);
-      return;
+    try {
+      await deleteTableRow(table.id, id);
+      setConfirmDeleteId(null);
+      await fetchTable();
+    } catch (err: any) {
+      setError(err?.message || 'تعذر حذف السجل.');
     }
-    setConfirmDeleteId(null);
-    await fetchTable();
   };
 
   const handleExport = () => {

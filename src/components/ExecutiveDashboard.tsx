@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, ArrowLeft, Download, RefreshCw } from 'lucide-react';
-import { exportRowsToCsv, formatMoney, getDueStatus, getSupabaseClient } from '../lib/supabase';
+import { listDueRows, listTableRows } from '../lib/dataService';
+import { exportRowsToCsv, formatMoney, getDueStatus } from '../lib/supabase';
 import type { AppRecord, DeliverableRecord, DueRow } from '../types/crm';
 
 interface ExecutiveDashboardProps {
@@ -26,20 +27,16 @@ export const ExecutiveDashboard: React.FC<ExecutiveDashboardProps> = ({ onSelect
     setLoading(true);
     setError(null);
     try {
-      const sb = getSupabaseClient();
-      const [dueRes, appsRes, dlRes] = await Promise.all([
-        sb.from('v_due').select('*').order('due_date'),
-        sb.from('apps').select('*').order('created_at'),
-        sb.from('deliverables').select('*'),
+      const [dueData, appsData, dlData] = await Promise.all([
+        listDueRows(),
+        listTableRows('apps'),
+        listTableRows('deliverables'),
       ]);
-      if (dueRes.error) throw dueRes.error;
-      if (appsRes.error) throw appsRes.error;
-      if (dlRes.error) throw dlRes.error;
-      setDueRows((dueRes.data as DueRow[]) || []);
-      setApps((appsRes.data as AppRecord[]) || []);
-      setDeliverables((dlRes.data as DeliverableRecord[]) || []);
+      setDueRows(dueData);
+      setApps(appsData as AppRecord[]);
+      setDeliverables(dlData as DeliverableRecord[]);
     } catch (err: any) {
-      setError(err?.message || 'تعذر تحميل بيانات الملخص من Supabase.');
+      setError(err?.message || 'تعذر تحميل بيانات الملخص.');
     } finally {
       setLoading(false);
     }

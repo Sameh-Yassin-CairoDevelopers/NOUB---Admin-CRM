@@ -33,20 +33,28 @@ export function generateGitHubRootFiles(customUrl?: string, customKey?: string):
   </div>
 
   <section id="login" hidden>
-    <form id="lf" class="login-card">
+    <div class="login-card">
       <div class="login-head">
         <h1>NOUB CRM</h1>
         <p>متابعة الاشتراكات والدومينات ومسار تسليم التطبيقات</p>
       </div>
-      <label>البريد الإلكتروني
-        <input id="em" type="email" placeholder="name@company.com" required autocomplete="email">
-      </label>
-      <label>كلمة المرور
-        <input id="pw" type="password" placeholder="••••••••" required autocomplete="current-password">
-      </label>
-      <button id="login-btn" type="submit">دخول</button>
+      <div class="auth-tabs" id="auth-tabs">
+        <button type="button" class="active" data-mode="login">تسجيل الدخول</button>
+        <button type="button" data-mode="signup">إنشاء حساب جديد</button>
+      </div>
+      <form id="lf" class="login-form">
+        <label>البريد الإلكتروني
+          <input id="em" type="email" placeholder="name@company.com" required autocomplete="email" dir="ltr">
+        </label>
+        <label>كلمة المرور (أو 12345678 للمعاينة)
+          <input id="pw" type="password" placeholder="••••••••" required minlength="6" autocomplete="current-password" dir="ltr">
+        </label>
+        <button id="login-btn" type="submit">دخول</button>
+      </form>
+      <button id="quick-btn" type="button" class="quick-btn">دخول سريع للمعاينة (كلمة المرور 12345678)</button>
       <p id="le" class="err-msg"></p>
-    </form>
+      <p id="li" class="ok-msg"></p>
+    </div>
   </section>
 
   <div id="app" hidden>
@@ -59,6 +67,9 @@ export function generateGitHubRootFiles(customUrl?: string, customKey?: string):
       <button id="out" class="ghost" type="button">تسجيل الخروج</button>
     </aside>
     <main>
+      <div id="local-banner" class="local-banner" hidden>
+        <span>وضع المعاينة الفورية (محلي على المتصفح) — للحفظ السحابي على Supabase أنشئ حساباً وفعّله من الإيميل.</span>
+      </div>
       <header class="topbar">
         <div>
           <h1 id="title"></h1>
@@ -104,6 +115,7 @@ nav button{display:block;width:100%;text-align:right;background:none;border:0;co
 nav button:hover{background:rgba(255,255,255,.08);color:#fff}
 nav button.on{background:var(--accent);color:#fff;font-weight:600}
 main{flex:1;padding:22px 26px;min-width:0;max-width:1440px}
+.local-banner{background:var(--warn-bg);border:1px solid #fde68a;color:#92400e;padding:10px 14px;border-radius:8px;font-size:12px;margin-bottom:14px;font-weight:600}
 .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:12px;flex-wrap:wrap;padding-bottom:14px;border-bottom:1px solid var(--border)}
 h1{font-size:21px;margin:0;color:var(--text);font-weight:700}
 .subtitle{margin:2px 0 0;color:var(--muted);font-size:13px}
@@ -145,11 +157,17 @@ td.b{font-weight:700;color:var(--text)}
 .team-card h4{margin:0 0 4px;font-size:14px}
 .team-card p{margin:2px 0;font-size:12px;color:var(--muted)}
 #login{display:grid;place-items:center;min-height:100vh;padding:20px}
-.login-card{background:#fff;padding:28px;border-radius:12px;width:min(380px,100%);display:grid;gap:14px;border:1px solid var(--border)}
+.login-card{background:#fff;padding:28px;border-radius:12px;width:min(410px,100%);display:grid;gap:14px;border:1px solid var(--border)}
 .login-head h1{margin:0;color:var(--navy);font-size:22px}
 .login-head p{margin:4px 0 0;color:var(--muted);font-size:13px}
-.login-card label{display:grid;gap:6px;font-weight:600;font-size:13px}
-.err-msg{color:var(--bad);margin:0;font-size:13px}
+.auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:#f1f5f9;padding:4px;border-radius:8px}
+.auth-tabs button{background:transparent;color:var(--muted);padding:7px;font-size:12px;border-radius:6px}
+.auth-tabs button.active{background:#fff;color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.login-form{display:grid;gap:12px}
+.login-form label{display:grid;gap:5px;font-weight:600;font-size:13px}
+.quick-btn{background:#eff6ff;color:#1e3a8a;border:1px solid #bfdbfe;font-size:12px;padding:9px 12px}
+.err-msg{color:var(--bad);margin:0;font-size:12px}
+.ok-msg{color:var(--ok);margin:0;font-size:12px}
 dialog{border:1px solid var(--border);border-radius:12px;padding:0;width:min(580px,94vw)}
 dialog::backdrop{background:rgba(15,23,42,.45)}
 #df{padding:20px;display:grid;gap:12px}
@@ -193,67 +211,200 @@ const daysLeft=d=>d?Math.round((new Date(d+'T00:00:00')-new Date().setHours(0,0,
 const stat=n=>n==null?null:n<0?['متأخر','bad']:n<=7?['قريب','warn']:['سليم','ok'];
 const money=n=>Number(n||0).toLocaleString('ar-EG',{maximumFractionDigits:2});
 
-let sb=null,cur=null,rows=[],dueStatusFilter='all',selectedAppId=null;
+const LOCAL_SESS_KEY='noub_crm_local_session_email';
+const LOCAL_DB_KEY='noub_crm_local_db_v1';
+let sb=null,cur=null,rows=[],dueStatusFilter='all',selectedAppId=null,authMode='login',localMode=false;
 const refs={};
+
+function seedLocalDb(){
+  const now=new Date().toISOString();
+  const apps=[
+    {id:'app-4b',created_at:now,name:'4B (فوربي)',description:null,platforms:null,status:'لم يبدأ'},
+    {id:'app-daro',created_at:now,name:'DARO (دارو)',description:null,platforms:null,status:'لم يبدأ'},
+    {id:'app-wikala',created_at:now,name:'WIKALA (وكالة)',description:'منصة سوق إلكتروني تخدم العملاء والتجار',platforms:'أندرويد',status:'لم يبدأ'}
+  ];
+  const tpl=[
+    ['التخطيط والمتطلبات','وثيقة متطلبات المنتج (PRD)'],['التخطيط والمتطلبات','دراسة السوق المصري والمنافسين'],['التخطيط والمتطلبات','خريطة رحلة المستخدم والميزات'],
+    ['التصميم','تصميم تجربة المستخدم UX'],['التصميم','نظام التصميم والهوية البصرية'],['التصميم','تصميم واجهات المستخدم UI'],['التصميم','النموذج التفاعلي Prototype'],['التصميم','اعتماد التصميم النهائي'],
+    ['التطوير','قاعدة البيانات والخلفية وواجهات API'],['التطوير','تطبيق الأندرويد'],['التطوير','تطبيق iOS / نسخة الويب'],['التطوير','لوحة تحكم الإدارة'],['التطوير','ربط الدفع الإلكتروني'],['التطوير','الإشعارات والرسائل'],
+    ['الاختبار والجودة','الاختبار الوظيفي'],['الاختبار والجودة','اختبار الأداء والأمان'],['الاختبار والجودة','اختبار قبول المستخدم UAT'],['الاختبار والجودة','الفترة التجريبية Beta'],
+    ['الإطلاق والتشغيل','سياسة الخصوصية والشروط'],['الإطلاق والتشغيل','النشر على Google Play / App Store'],['الإطلاق والتشغيل','الإطلاق التسويقي'],['الإطلاق والتشغيل','خطة الدعم بعد الإطلاق']
+  ];
+  const deliverables=[];
+  apps.forEach(a=>tpl.forEach(([stage,item],i)=>deliverables.push({id:'dl-'+a.id+'-'+i,created_at:now,app_id:a.id,stage,item,status:'لم يبدأ',acceptance:'لم يُختبر'})));
+  return {
+    telecom_lines:[
+      {id:'t1',created_at:now,name:'خط أرضي 1',kind:'أرضي',service:'مكالمات + إنترنت',cycle:'شهري'},
+      {id:'t2',created_at:now,name:'خط أرضي 2',kind:'أرضي',service:'مكالمات + إنترنت',cycle:'شهري'},
+      {id:'t3',created_at:now,name:'محمول 1',kind:'محمول',service:'داتا',cycle:'شهري'},
+      {id:'t4',created_at:now,name:'محمول 2',kind:'محمول',service:'داتا',cycle:'شهري'},
+      {id:'t5',created_at:now,name:'محمول 3',kind:'محمول',service:'داتا',cycle:'شهري'}
+    ],
+    domains:[{id:'d1',created_at:now,name:'mashawer.com.eg',kind:'دومين',provider:'المصرية للاتصالات',cycle:'سنوي',auto_renew:false}],
+    wanted_domains:[],
+    providers:[
+      {id:'p1',created_at:now,name:'Google',category:'سحابة / متاجر'},
+      {id:'p2',created_at:now,name:'Apple',category:'متاجر تطبيقات'},
+      {id:'p3',created_at:now,name:'Cloudinary',category:'وسائط'},
+      {id:'p4',created_at:now,name:'Agora',category:'فيديو / صوت'}
+    ],
+    api_keys:[],sites:[],payments:[],apps,deliverables,team:[]
+  };
+}
+function getLocalDb(){
+  const raw=localStorage.getItem(LOCAL_DB_KEY);
+  if(raw){try{return JSON.parse(raw)}catch{}}
+  const fresh=seedLocalDb();localStorage.setItem(LOCAL_DB_KEY,JSON.stringify(fresh));return fresh;
+}
+function saveLocalDb(db){localStorage.setItem(LOCAL_DB_KEY,JSON.stringify(db));}
+
+async function dbSelect(tableId){
+  if(localMode) return getLocalDb()[tableId]||[];
+  const{data,error}=await sb.from(tableId).select('*').order('created_at');
+  if(error) throw error;
+  return data||[];
+}
+async function dbDue(){
+  if(localMode){
+    const db=getLocalDb(),out=[];
+    [['الاتصالات','telecom_lines'],['الدومينات والاستضافة','domains'],['مزودو الخدمات','providers']].forEach(([cat,tid])=>{
+      (db[tid]||[]).forEach(r=>{if(r.due_date) out.push({cat,item:r.name,amount:r.amount,due_date:r.due_date,days_left:daysLeft(r.due_date)});});
+    });
+    return out.sort((a,b)=>a.due_date.localeCompare(b.due_date));
+  }
+  const{data,error}=await sb.from('v_due').select('*').order('due_date');
+  if(error) throw error;
+  return data||[];
+}
+async function dbInsert(tableId,obj){
+  if(localMode){
+    const db=getLocalDb();
+    db[tableId]=[...(db[tableId]||[]),{id:tableId+'-'+Date.now(),created_at:new Date().toISOString(),...obj}];
+    saveLocalDb(db);return;
+  }
+  const{error}=await sb.from(tableId).insert(obj);if(error) throw error;
+}
+async function dbUpdate(tableId,id,obj){
+  if(localMode){
+    const db=getLocalDb();
+    db[tableId]=(db[tableId]||[]).map(r=>r.id===id?{...r,...obj}:r);
+    saveLocalDb(db);return;
+  }
+  const{error}=await sb.from(tableId).update(obj).eq('id',id);if(error) throw error;
+}
+async function dbDelete(tableId,id){
+  if(localMode){
+    const db=getLocalDb();
+    db[tableId]=(db[tableId]||[]).filter(r=>r.id!==id);
+    if(tableId==='apps'){
+      db.deliverables=(db.deliverables||[]).filter(d=>d.app_id!==id);
+      db.team=(db.team||[]).filter(t=>t.app_id!==id);
+    }
+    saveLocalDb(db);return;
+  }
+  const{error}=await sb.from(tableId).delete().eq('id',id);if(error) throw error;
+}
 
 function showBootError(msg){
   const bs=$('#boot-screen');
   if(bs){bs.hidden=false;$('#boot-msg').innerHTML='<strong style="color:#dc2626">تعذر تشغيل التطبيق</strong><br><br>'+esc(msg);}
-  $('#login').hidden=true;
-  $('#app').hidden=true;
+  $('#login').hidden=true;$('#app').hidden=true;
 }
 
 async function refMap(t,force=false){
   if(!refs[t]||force){
-    const{data}=await sb.from(t).select('id,name').order('name');
-    refs[t]=data||[];
+    if(localMode){refs[t]=(getLocalDb()[t]||[]).map(a=>({id:a.id,name:a.name}));}
+    else{const{data}=await sb.from(t).select('id,name').order('name');refs[t]=data||[];}
   }
   return refs[t];
 }
 
 async function boot(){
   try{
-    if(typeof window.supabase==='undefined') throw new Error('تعذر تحميل مكتبة Supabase من الإنترنت.');
-    if(typeof CONFIG==='undefined'||!CONFIG.SUPABASE_URL||!CONFIG.SUPABASE_ANON_KEY){
-      throw new Error('بيانات CONFIG في ملف config.js غير مكتملة.');
+    if(typeof window.supabase!=='undefined'&&typeof CONFIG!=='undefined'&&CONFIG.SUPABASE_URL&&CONFIG.SUPABASE_ANON_KEY){
+      sb=window.supabase.createClient(CONFIG.SUPABASE_URL,CONFIG.SUPABASE_ANON_KEY);
+      const{data}=await sb.auth.getSession();
+      if(data?.session){
+        localMode=false;localStorage.removeItem(LOCAL_SESS_KEY);
+        $('#boot-screen').hidden=true;$('#user-email').textContent=data.session.user?.email||'';
+        return start();
+      }
     }
-    sb=window.supabase.createClient(CONFIG.SUPABASE_URL,CONFIG.SUPABASE_ANON_KEY);
-    const{data,error}=await sb.auth.getSession();
-    if(error) throw error;
+    const localEmail=localStorage.getItem(LOCAL_SESS_KEY);
     $('#boot-screen').hidden=true;
-    if(data.session){
-      $('#user-email').textContent=data.session.user?.email||'';
-      start();
-    }else{
-      $('#login').hidden=false;
+    if(localEmail){
+      localMode=true;$('#user-email').textContent=localEmail;
+      return start();
     }
+    $('#login').hidden=false;
   }catch(err){
     showBootError(err?.message||'حدث خطأ غير متوقع أثناء التشغيل.');
   }
 }
 
+$('#auth-tabs').onclick=e=>{
+  const m=e.target.dataset.mode;
+  if(!m) return;
+  authMode=m;
+  document.querySelectorAll('#auth-tabs button').forEach(b=>b.classList.toggle('active',b.dataset.mode===m));
+  $('#login-btn').textContent=m==='signup'?'إنشاء الحساب في Supabase':'دخول';
+  $('#le').textContent='';$('#li').textContent='';
+};
+
 $('#lf').onsubmit=async e=>{
   e.preventDefault();
-  $('#le').textContent='';
+  $('#le').textContent='';$('#li').textContent='';
   $('#login-btn').disabled=true;
+  const email=$('#em').value.trim(),password=$('#pw').value;
   try{
-    const{data,error}=await sb.auth.signInWithPassword({email:$('#em').value.trim(),password:$('#pw').value});
-    if(error){$('#le').textContent='بيانات الدخول غير صحيحة أو الحساب غير مفعل.';return;}
-    $('#login').hidden=true;
-    $('#user-email').textContent=data.user?.email||'';
-    start();
+    if(!sb) throw new Error('تعذر الاتصال بـ Supabase');
+    if(authMode==='signup'){
+      const{data,error}=await sb.auth.signUp({email,password});
+      if(error){$('#le').textContent=error.message;return;}
+      if(data.session){
+        localMode=false;localStorage.removeItem(LOCAL_SESS_KEY);
+        $('#login').hidden=true;$('#user-email').textContent=data.user?.email||email;start();return;
+      }
+      $('#li').textContent='تم إرسال رابط التفعيل لبريدك الإلكتروني. افتح الإيميل لتأكيد الحساب ثم سجل الدخول، أو اضغط دخول سريع للمعاينة.';
+      return;
+    }
+    const{data,error}=await sb.auth.signInWithPassword({email,password});
+    if(!error&&data.session){
+      localMode=false;localStorage.removeItem(LOCAL_SESS_KEY);
+      $('#login').hidden=true;$('#user-email').textContent=data.user?.email||email;start();return;
+    }
+    if(password==='12345678'){
+      localMode=true;localStorage.setItem(LOCAL_SESS_KEY,email);
+      $('#login').hidden=true;$('#user-email').textContent=email;start();return;
+    }
+    $('#le').textContent='بيانات الدخول غير صحيحة. يمكنك إنشاء حساب جديد أو استخدام 12345678 للمعاينة.';
   }catch(err){
+    if(password==='12345678'){
+      localMode=true;localStorage.setItem(LOCAL_SESS_KEY,email);
+      $('#login').hidden=true;$('#user-email').textContent=email;start();return;
+    }
     $('#le').textContent=err?.message||'تعذر تسجيل الدخول.';
   }finally{
     $('#login-btn').disabled=false;
   }
 };
 
-$('#out').onclick=async()=>{await sb.auth.signOut();location.reload()};
+$('#quick-btn').onclick=()=>{
+  const email=$('#em').value.trim()||'admin@noub-crm.local';
+  $('#em').value=email;$('#pw').value='12345678';
+  localMode=true;localStorage.setItem(LOCAL_SESS_KEY,email);
+  $('#login').hidden=true;$('#user-email').textContent=email;start();
+};
+
+$('#out').onclick=async()=>{
+  localStorage.removeItem(LOCAL_SESS_KEY);localMode=false;
+  if(sb) await sb.auth.signOut().catch(()=>{});
+  location.reload();
+};
 
 function start(){
-  $('#login').hidden=true;
-  $('#app').hidden=false;
+  $('#login').hidden=true;$('#app').hidden=false;
+  $('#local-banner').hidden=!localMode;
   const nav=$('#nav');
   const groups=[
     {id:'subscriptions',label:'الاشتراكات والوصول'},
@@ -283,90 +434,79 @@ async function dash(){
   $('#title').textContent='ملخص المتابعة والرسوم البيانية';
   $('#subtitle').textContent='متابعة الاستحقاقات المالية ونسب إنجاز التطبيقات';
   $('#view').innerHTML='<div class="panel">جاري تحميل البيانات...</div>';
-  const[{data:due,error:e1},{data:apps},{data:dl}]=await Promise.all([
-    sb.from('v_due').select('*').order('due_date'),
-    sb.from('apps').select('id,name,status'),
-    sb.from('deliverables').select('app_id,status,stage')
-  ]);
-  if(e1){$('#view').innerHTML='<div class="panel err-msg">'+esc(e1.message)+'</div>';return;}
-  const d=due||[],late=d.filter(r=>r.days_left<0),w7=d.filter(r=>r.days_left>=0&&r.days_left<=7),m30=d.filter(r=>r.days_left>=0&&r.days_left<=30);
-  const sum=a=>a.reduce((s,r)=>s+Number(r.amount||0),0);
-  const card=(l,v,k='')=>\`<div class="card \${k}"><span>\${l}</span><b>\${v}</b></div>\`;
+  try{
+    const[d,apps,dl]=await Promise.all([dbDue(),dbSelect('apps'),dbSelect('deliverables')]);
+    const late=d.filter(r=>r.days_left<0),w7=d.filter(r=>r.days_left>=0&&r.days_left<=7),m30=d.filter(r=>r.days_left>=0&&r.days_left<=30);
+    const sum=a=>a.reduce((s,r)=>s+Number(r.amount||0),0);
+    const card=(l,v,k='')=>\`<div class="card \${k}"><span>\${l}</span><b>\${v}</b></div>\`;
 
-  const catTotals={};
-  d.forEach(r=>{catTotals[r.cat]=(catTotals[r.cat]||0)+Number(r.amount||0);});
-  const maxCat=Math.max(1,...Object.values(catTotals));
-  const catBars=Object.entries(catTotals).map(([cat,val])=>{
-    const pct=Math.round((val/maxCat)*100);
-    return \`<div class="bar-row"><div class="bar-meta"><span>\${esc(cat)}</span><span class="num">\${money(val)} ج.م</span></div><div class="bar"><i style="width:\${pct}%;background:#1e3a5f"></i></div></div>\`;
-  }).join('')||'<p class="subtitle">لا توجد التزامات مسجلة</p>';
+    const catTotals={};
+    d.forEach(r=>{catTotals[r.cat]=(catTotals[r.cat]||0)+Number(r.amount||0);});
+    const maxCat=Math.max(1,...Object.values(catTotals));
+    const catBars=Object.entries(catTotals).map(([cat,val])=>{
+      const pct=Math.round((val/maxCat)*100);
+      return \`<div class="bar-row"><div class="bar-meta"><span>\${esc(cat)}</span><span class="num">\${money(val)} ج.م</span></div><div class="bar"><i style="width:\${pct}%;background:#1e3a5f"></i></div></div>\`;
+    }).join('')||'<p class="subtitle">لا توجد التزامات مسجلة</p>';
 
-  const appBars=(apps||[]).map(a=>{
-    const items=(dl||[]).filter(r=>r.app_id===a.id);
-    const done=items.filter(r=>r.status==='تم الاستلام').length;
-    const p=items.length?Math.round((100*done)/items.length):0;
-    return \`<div class="bar-row" data-app="\${a.id}"><div class="bar-meta"><span>\${esc(a.name)} (\${done}/\${items.length})</span><span class="num">\${p}%</span></div><div class="bar"><i style="width:\${p}%"></i></div></div>\`;
-  }).join('')||'<p class="subtitle">لا توجد تطبيقات مسجلة</p>';
+    const appBars=apps.map(a=>{
+      const items=dl.filter(r=>r.app_id===a.id);
+      const done=items.filter(r=>r.status==='تم الاستلام').length;
+      const p=items.length?Math.round((100*done)/items.length):0;
+      return \`<div class="bar-row" data-app="\${a.id}"><div class="bar-meta"><span>\${esc(a.name)} (\${done}/\${items.length})</span><span class="num">\${p}%</span></div><div class="bar"><i style="width:\${p}%"></i></div></div>\`;
+    }).join('')||'<p class="subtitle">لا توجد تطبيقات مسجلة</p>';
 
-  const filteredDue=d.filter(r=>{
-    const s=stat(r.days_left);
-    if(dueStatusFilter==='all') return true;
-    return s&&s[1]===dueStatusFilter;
-  });
+    const filteredDue=d.filter(r=>{
+      const s=stat(r.days_left);
+      if(dueStatusFilter==='all') return true;
+      return s&&s[1]===dueStatusFilter;
+    });
 
-  $('#view').innerHTML=\`
-    <div class="cards">
-      \${card('بنود متأخرة',late.length,late.length?'bad':'')}
-      \${card('المبلغ المتأخر (ج.م)',money(sum(late)),late.length?'bad':'')}
-      \${card('مستحق خلال 7 أيام',w7.length,w7.length?'warn':'')}
-      \${card('مستحق خلال 30 يوماً (ج.م)',money(sum(m30)),'warn')}
-    </div>
-    <div class="grid-2">
-      <div class="panel"><h3>جاهزية التطبيقات (اضغط للتفاصيل)</h3>\${appBars}</div>
-      <div class="panel"><h3>توزيع الالتزامات المالية حسب الفئة</h3>\${catBars}</div>
-    </div>
-    <div class="panel">
-      <h3>جدول الاستحقاقات القادمة والمتأخرة</h3>
-      <div class="seg" id="due-seg">
-        <button type="button" class="secondary \${dueStatusFilter==='all'?'active':''}" data-f="all">الكل (\${d.length})</button>
-        <button type="button" class="secondary \${dueStatusFilter==='bad'?'active':''}" data-f="bad">متأخر (\${late.length})</button>
-        <button type="button" class="secondary \${dueStatusFilter==='warn'?'active':''}" data-f="warn">قريب (\${w7.length})</button>
-        <button type="button" class="secondary \${dueStatusFilter==='ok'?'active':''}" data-f="ok">سليم</button>
+    $('#view').innerHTML=\`
+      <div class="cards">
+        \${card('بنود متأخرة',late.length,late.length?'bad':'')}
+        \${card('المبلغ المتأخر (ج.م)',money(sum(late)),late.length?'bad':'')}
+        \${card('مستحق خلال 7 أيام',w7.length,w7.length?'warn':'')}
+        \${card('مستحق خلال 30 يوماً (ج.م)',money(sum(m30)),'warn')}
       </div>
-      <div class="wrap">
-        <table>
-          <tr><th>الفئة</th><th>البند</th><th>المبلغ (ج.م)</th><th>تاريخ الاستحقاق</th><th>المتبقي (يوم)</th><th>الحالة</th></tr>
-          \${filteredDue.map(r=>{
-            const s=stat(r.days_left);
-            return \`<tr><td>\${esc(r.cat)}</td><td class="b">\${esc(r.item)}</td><td class="b num">\${money(r.amount)}</td><td class="num">\${esc(r.due_date)}</td><td class="num">\${r.days_left}</td><td><span class="st \${s[1]}">\${s[0]}</span></td></tr>\`;
-          }).join('')||'<tr><td colspan="6">لا توجد بنود مطابقة للفلتر</td></tr>'}
-        </table>
+      <div class="grid-2">
+        <div class="panel"><h3>جاهزية التطبيقات (اضغط للتفاصيل)</h3>\${appBars}</div>
+        <div class="panel"><h3>توزيع الالتزامات المالية حسب الفئة</h3>\${catBars}</div>
       </div>
-    </div>\`;
+      <div class="panel">
+        <h3>جدول الاستحقاقات القادمة والمتأخرة</h3>
+        <div class="seg" id="due-seg">
+          <button type="button" class="secondary \${dueStatusFilter==='all'?'active':''}" data-f="all">الكل (\${d.length})</button>
+          <button type="button" class="secondary \${dueStatusFilter==='bad'?'active':''}" data-f="bad">متأخر (\${late.length})</button>
+          <button type="button" class="secondary \${dueStatusFilter==='warn'?'active':''}" data-f="warn">قريب (\${w7.length})</button>
+          <button type="button" class="secondary \${dueStatusFilter==='ok'?'active':''}" data-f="ok">سليم</button>
+        </div>
+        <div class="wrap">
+          <table>
+            <tr><th>الفئة</th><th>البند</th><th>المبلغ (ج.م)</th><th>تاريخ الاستحقاق</th><th>المتبقي (يوم)</th><th>الحالة</th></tr>
+            \${filteredDue.map(r=>{
+              const s=stat(r.days_left);
+              return \`<tr><td>\${esc(r.cat)}</td><td class="b">\${esc(r.item)}</td><td class="b num">\${money(r.amount)}</td><td class="num">\${esc(r.due_date)}</td><td class="num">\${r.days_left}</td><td><span class="st \${s[1]}">\${s[0]}</span></td></tr>\`;
+            }).join('')||'<tr><td colspan="6">لا توجد بنود مطابقة للفلتر</td></tr>'}
+          </table>
+        </div>
+      </div>\`;
 
-  $('#due-seg').onclick=e=>{
-    const f=e.target.dataset.f;
-    if(f){dueStatusFilter=f;dash();}
-  };
-  document.querySelectorAll('[data-app]').forEach(el=>{
-    el.onclick=()=>{selectedAppId=el.dataset.app;go('app-view');};
-  });
+    $('#due-seg').onclick=e=>{const f=e.target.dataset.f;if(f){dueStatusFilter=f;dash();}};
+    document.querySelectorAll('[data-app]').forEach(el=>{el.onclick=()=>{selectedAppId=el.dataset.app;go('app-view');};});
+  }catch(err){
+    $('#view').innerHTML='<div class="panel err-msg">'+esc(err.message)+'</div>';
+  }
 }
 
 async function appWorkspace(){
   $('#title').textContent='متابعة التطبيقات والهيكل الوظيفي';
   $('#subtitle').textContent='مسار الاستلام والمراحل والهيكل الوظيفي لكل تطبيق';
-  const[{data:apps},{data:dl},{data:team}]=await Promise.all([
-    sb.from('apps').select('*').order('created_at'),
-    sb.from('deliverables').select('*').order('created_at'),
-    sb.from('team').select('*').order('created_at')
-  ]);
-  const appList=apps||[];
+  const[appList,dl,team]=await Promise.all([dbSelect('apps'),dbSelect('deliverables'),dbSelect('team')]);
   if(!appList.length){$('#view').innerHTML='<div class="panel">لا توجد تطبيقات مسجلة.</div>';return;}
   if(!selectedAppId||!appList.some(a=>a.id===selectedAppId)) selectedAppId=appList[0].id;
   const app=appList.find(a=>a.id===selectedAppId);
-  const appDl=(dl||[]).filter(d=>d.app_id===app.id);
-  const appTeam=(team||[]).filter(m=>m.app_id===app.id);
+  const appDl=dl.filter(d=>d.app_id===app.id);
+  const appTeam=team.filter(m=>m.app_id===app.id);
 
   const stageHtml=STAGES.map(st=>{
     const items=appDl.filter(d=>d.stage===st);
@@ -400,10 +540,7 @@ async function appWorkspace(){
       </div>
     </div>\`;
 
-  $('#app-tabs').onclick=e=>{
-    const id=e.target.dataset.id;
-    if(id){selectedAppId=id;appWorkspace();}
-  };
+  $('#app-tabs').onclick=e=>{const id=e.target.dataset.id;if(id){selectedAppId=id;appWorkspace();}};
 }
 
 async function grid(t){
@@ -411,9 +548,7 @@ async function grid(t){
   $('#title').textContent=t.n;
   $('#subtitle').textContent='إدارة وتصفية السجلات وتصديرها';
   for(const f of t.f) if(f.t==='ref') await refMap(f.ref,true);
-  const{data,error}=await sb.from(t.id).select('*').order('created_at');
-  if(error){$('#view').innerHTML='<div class="panel err-msg">'+esc(error.message)+'</div>';return;}
-  rows=data||[];
+  try{rows=await dbSelect(t.id);}catch(err){$('#view').innerHTML='<div class="panel err-msg">'+esc(err.message)+'</div>';return;}
   const fltFields=t.f.filter(f=>f.flt).slice(0,2);
   const fltHtml=fltFields.map(f=>{
     const opts=f.t==='ref'?(refs[f.ref]||[]).map(o=>\`<option value="\${o.id}">\${esc(o.name)}</option>\`).join(''):(f.o||[]).map(o=>\`<option value="\${esc(o)}">\${esc(o)}</option>\`).join('');
@@ -438,8 +573,7 @@ function getFilteredRows(){
 }
 
 function exportCsv(t){
-  const list=getFilteredRows();
-  const fs=t.f;
+  const list=getFilteredRows(),fs=t.f;
   const escCsv=v=>{const s=String(v??'');return /[",\\n\\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;};
   const lines=[fs.map(f=>escCsv(f.l)).join(','),...list.map(r=>fs.map(f=>{
     let v=r[f.k];
@@ -448,10 +582,7 @@ function exportCsv(t){
     return escCsv(v);
   }).join(','))];
   const blob=new Blob(['\\uFEFF'+lines.join('\\r\\n')],{type:'text/csv;charset=utf-8;'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download=t.id+'.csv';
-  a.click();
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=t.id+'.csv';a.click();
 }
 
 function cell(f,r){
@@ -473,8 +604,7 @@ function draw(){
     const b=e.target;
     if(b.dataset.e) form(rows.find(r=>r.id===b.dataset.e));
     if(b.dataset.d&&confirm('تأكيد الحذف؟')){
-      const{error}=await sb.from(t.id).delete().eq('id',b.dataset.d);
-      error?alert(error.message):grid(t);
+      try{await dbDelete(t.id,b.dataset.d);grid(t);}catch(err){alert(err.message);}
     }
   };
 }
@@ -500,12 +630,11 @@ function form(r){
       const el=$('#df').elements[f.k];
       o[f.k]=f.t==='bool'?el.checked:el.value===''?null:f.t==='num'?Number(el.value):el.value;
     });
-    const q=r?sb.from(t.id).update(o).eq('id',r.id):sb.from(t.id).insert(o);
-    const{error}=await q;
-    if(error){alert('تعذر الحفظ: '+error.message);return;}
-    if(t.id==='apps') await refMap('apps',true);
-    $('#dlg').close();
-    grid(t);
+    try{
+      if(r){await dbUpdate(t.id,r.id,o);}else{await dbInsert(t.id,o);}
+      if(t.id==='apps') await refMap('apps',true);
+      $('#dlg').close();grid(t);
+    }catch(err){alert('تعذر الحفظ: '+err.message);}
   };
   $('#dlg').showModal();
 }

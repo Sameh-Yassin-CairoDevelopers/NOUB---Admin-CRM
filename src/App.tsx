@@ -21,8 +21,10 @@ import {
   AppWindow,
   CheckSquare,
   Users,
+  Info,
 } from 'lucide-react';
 import { TABLES } from './data/tables';
+import { getLocalSessionEmail, setLocalSessionEmail } from './lib/dataService';
 import { getSupabaseClient } from './lib/supabase';
 import type { TableId, ViewId } from './types/crm';
 import { LoginView } from './components/LoginView';
@@ -47,6 +49,7 @@ const TABLE_ICONS: Record<TableId, React.ReactNode> = {
 export default function App() {
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [localPreview, setLocalPreview] = useState(false);
   const [activeView, setActiveView] = useState<ViewId>('dash');
   const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -57,11 +60,25 @@ export default function App() {
     try {
       const sb = getSupabaseClient();
       const { data } = await sb.auth.getSession();
-      setUserEmail(data.session?.user?.email ?? null);
+      if (data.session?.user?.email) {
+        setLocalSessionEmail(null);
+        setLocalPreview(false);
+        setUserEmail(data.session.user.email);
+        return;
+      }
     } catch {
-      setUserEmail(null);
+      // Ignore and check local preview session
     } finally {
       setCheckingAuth(false);
+    }
+
+    const localEmail = getLocalSessionEmail();
+    if (localEmail) {
+      setLocalPreview(true);
+      setUserEmail(localEmail);
+    } else {
+      setLocalPreview(false);
+      setUserEmail(null);
     }
   };
 
@@ -70,7 +87,14 @@ export default function App() {
     try {
       const sb = getSupabaseClient();
       const { data: listener } = sb.auth.onAuthStateChange((_event, session) => {
-        setUserEmail(session?.user?.email ?? null);
+        if (session?.user?.email) {
+          setLocalSessionEmail(null);
+          setLocalPreview(false);
+          setUserEmail(session.user.email);
+        } else if (!getLocalSessionEmail()) {
+          setLocalPreview(false);
+          setUserEmail(null);
+        }
       });
       return () => listener.subscription.unsubscribe();
     } catch {
@@ -79,6 +103,8 @@ export default function App() {
   }, []);
 
   const handleSignOut = async () => {
+    setLocalSessionEmail(null);
+    setLocalPreview(false);
     try {
       const sb = getSupabaseClient();
       await sb.auth.signOut();
@@ -280,6 +306,24 @@ export default function App() {
 
       {/* Main Content */}
       <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 max-w-[1440px]">
+        {localPreview && (
+          <div className="mb-4 px-4 py-2.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-xs flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Info className="w-4 h-4 shrink-0 text-amber-700" />
+              <span>
+                وضع المعاينة الفورية (محلي على متصفحك) — للحفظ السحابي على Supabase، أنشئ حساباً أو سجل بحساب مفعّل.
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="font-bold underline underline-offset-4 hover:text-amber-950 whitespace-nowrap cursor-pointer"
+            >
+              تسجيل بحساب Supabase
+            </button>
+          </div>
+        )}
+
         <header className="pb-5 mb-6 border-b border-slate-200 flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="text-xl sm:text-2xl font-bold text-slate-900">{headerInfo.title}</h1>

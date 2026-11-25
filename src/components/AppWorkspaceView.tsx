@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Plus, Pencil, Trash2, Users, CheckSquare, RefreshCw, AlertTriangle } from 'lucide-react';
 import { DELIVERABLE_STATUSES, STAGES, TABLES, TEAM_LEVELS } from '../data/tables';
-import { getSupabaseClient } from '../lib/supabase';
+import { deleteTableRow, insertTableRow, listTableRows, updateTableRow } from '../lib/dataService';
 import type { AnyRecord, AppRecord, DeliverableRecord, TableId, TeamRecord } from '../types/crm';
 import { RecordModal } from './RecordModal';
 
@@ -30,20 +30,14 @@ export const AppWorkspaceView: React.FC<AppWorkspaceViewProps> = ({ initialAppId
     setLoading(true);
     setError(null);
     try {
-      const sb = getSupabaseClient();
-      const [appsRes, dlRes, teamRes] = await Promise.all([
-        sb.from('apps').select('*').order('created_at'),
-        sb.from('deliverables').select('*').order('created_at'),
-        sb.from('team').select('*').order('created_at'),
+      const [appList, dlList, teamList] = await Promise.all([
+        listTableRows('apps') as Promise<AppRecord[]>,
+        listTableRows('deliverables') as Promise<DeliverableRecord[]>,
+        listTableRows('team') as Promise<TeamRecord[]>,
       ]);
-      if (appsRes.error) throw appsRes.error;
-      if (dlRes.error) throw dlRes.error;
-      if (teamRes.error) throw teamRes.error;
-
-      const appList = (appsRes.data as AppRecord[]) || [];
       setApps(appList);
-      setDeliverables((dlRes.data as DeliverableRecord[]) || []);
-      setTeam((teamRes.data as TeamRecord[]) || []);
+      setDeliverables(dlList);
+      setTeam(teamList);
 
       if (appList.length > 0) {
         setSelectedAppId((prev) => {
@@ -142,44 +136,41 @@ export const AppWorkspaceView: React.FC<AppWorkspaceViewProps> = ({ initialAppId
   }, [appTeam]);
 
   const handleQuickStatusChange = async (deliverableId: string, newStatus: string) => {
-    const sb = getSupabaseClient();
-    const receivedOn = newStatus === 'تم الاستلام' ? new Date().toISOString().slice(0, 10) : null;
-    const { error: updErr } = await sb
-      .from('deliverables')
-      .update({ status: newStatus, ...(receivedOn ? { received_on: receivedOn } : {}) })
-      .eq('id', deliverableId);
-    if (updErr) {
-      setError(updErr.message);
-      return;
+    try {
+      const receivedOn = newStatus === 'تم الاستلام' ? new Date().toISOString().slice(0, 10) : null;
+      await updateTableRow('deliverables', deliverableId, {
+        status: newStatus,
+        ...(receivedOn ? { received_on: receivedOn } : {}),
+      });
+      setDeliverables((prev) =>
+        prev.map((item) =>
+          item.id === deliverableId
+            ? { ...item, status: newStatus, received_on: receivedOn ?? item.received_on }
+            : item
+        )
+      );
+    } catch (err: any) {
+      setError(err?.message || 'تعذر تحديث الحالة.');
     }
-    setDeliverables((prev) =>
-      prev.map((item) =>
-        item.id === deliverableId
-          ? { ...item, status: newStatus, received_on: receivedOn ?? item.received_on }
-          : item
-      )
-    );
   };
 
   const handleSaveRecord = async (payload: Record<string, any>, existingId?: string) => {
-    const sb = getSupabaseClient();
     const { tableId } = modalState;
-    const q = existingId
-      ? sb.from(tableId).update(payload).eq('id', existingId)
-      : sb.from(tableId).insert(payload);
-    const { error: saveErr } = await q;
-    if (saveErr) throw saveErr;
+    if (existingId) {
+      await updateTableRow(tableId, existingId, payload);
+    } else {
+      await insertTableRow(tableId, payload);
+    }
     await fetchAll();
   };
 
   const handleDeleteRecord = async (tableId: TableId, id: string) => {
-    const sb = getSupabaseClient();
-    const { error: delErr } = await sb.from(tableId).delete().eq('id', id);
-    if (delErr) {
-      setError(delErr.message);
-      return;
+    try {
+      await deleteTableRow(tableId, id);
+      await fetchAll();
+    } catch (err: any) {
+      setError(err?.message || 'تعذر حذف السجل.');
     }
-    await fetchAll();
   };
 
   if (loading) {

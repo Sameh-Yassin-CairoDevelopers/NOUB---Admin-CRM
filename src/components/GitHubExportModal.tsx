@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { X, Download, FileCode2, FolderCheck, Archive } from 'lucide-react';
+import { X, Download, FileCode2, FolderCheck, Archive, Copy, Check } from 'lucide-react';
 import {
   downloadGitHubZip,
   downloadSingleStaticFile,
+  generateGitHubRootFiles,
   type StaticBundleFiles,
 } from '../lib/githubExport';
 import { getSupabaseConfig } from '../lib/supabase';
@@ -13,11 +14,11 @@ interface GitHubExportModalProps {
 }
 
 const FILE_DESCRIPTIONS: Array<{ name: keyof StaticBundleFiles; desc: string }> = [
-  { name: 'index.html', desc: 'الصفحة الرئيسية (مصححة لتقرأ مباشرة من ./ في المجلد الرئيسي)' },
+  { name: 'index.html', desc: 'الصفحة الرئيسية (تقرأ ./style.css و ./app.js من المجلد الرئيسي مباشرة)' },
   { name: 'style.css', desc: 'التنسيق المحدث مع دعم الخطوط العربية والرسوم البيانية' },
   { name: 'config.js', desc: 'إعدادات Supabase الخاصة بمشروعك' },
   { name: 'tables.js', desc: 'تعريف الجداول العشرة وخيارات الفلترة والتطبيقات' },
-  { name: 'app.js', desc: 'منطق التشغيل الآمن + الرسوم البيانية + الفلاتر + تصدير CSV' },
+  { name: 'app.js', desc: 'التشغيل الآمن + التسجيل + الدخول بـ 12345678 + الرسوم البيانية والفلاتر' },
 ];
 
 export const GitHubExportModal: React.FC<GitHubExportModalProps> = ({ open, onClose }) => {
@@ -25,6 +26,7 @@ export const GitHubExportModal: React.FC<GitHubExportModalProps> = ({ open, onCl
   const [sbUrl, setSbUrl] = useState(cfg.url);
   const [sbKey, setSbKey] = useState(cfg.anonKey);
   const [downloading, setDownloading] = useState(false);
+  const [copiedFile, setCopiedFile] = useState<string | null>(null);
 
   if (!open) return null;
 
@@ -35,6 +37,13 @@ export const GitHubExportModal: React.FC<GitHubExportModalProps> = ({ open, onCl
     } finally {
       setDownloading(false);
     }
+  };
+
+  const handleCopyFile = async (filename: keyof StaticBundleFiles) => {
+    const files = generateGitHubRootFiles(sbUrl, sbKey);
+    await navigator.clipboard.writeText(files[filename]);
+    setCopiedFile(filename);
+    setTimeout(() => setCopiedFile(null), 2000);
   };
 
   return (
@@ -49,10 +58,10 @@ export const GitHubExportModal: React.FC<GitHubExportModalProps> = ({ open, onCl
             <FolderCheck className="w-5 h-5 text-[#1E3A5F]" />
             <div>
               <h3 className="text-base font-bold text-slate-900">
-                تصدير ملفات GitHub Pages المصححة (NOUB-CRM)
+                ملفات GitHub Pages المصححة لمستودع NOUB-CRM
               </h3>
               <p className="text-xs text-slate-500">
-                جاهزة للرفع المباشر في المجلد الرئيسي للمستودع بدون مجلدات css أو js
+                لإصلاح الصفحة البيضاء على GitHub: استبدل الملفات الموجودة في المجلد الرئيسي بهذه الملفات
               </p>
             </div>
           </div>
@@ -68,20 +77,15 @@ export const GitHubExportModal: React.FC<GitHubExportModalProps> = ({ open, onCl
 
         <div className="overflow-y-auto p-6 space-y-5">
           <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-700 space-y-1.5">
-            <p className="font-bold text-slate-900">ما الذي تم إصلاحه في هذه الحزمة؟</p>
+            <p className="font-bold text-slate-900">خطوات إصلاح الصفحة البيضاء على GitHub Pages:</p>
             <p>
-              1. تعديل مسارات الاستدعاء في <span className="font-mono">index.html</span> من{' '}
-              <span className="font-mono text-red-700">css/style.css</span> و{' '}
-              <span className="font-mono text-red-700">js/*.js</span> إلى{' '}
-              <span className="font-mono text-emerald-700">./style.css</span> و{' '}
-              <span className="font-mono text-emerald-700">./*.js</span> للقراءة من المجلد الرئيسي مباشرة.
+              1. حمّل ملف الـ ZIP بالأسفل (أو انسخ محتوى كل ملف بالزر بجانبه).
             </p>
             <p>
-              2. إضافة شاشة تحميل ومعالجة أخطاء صريحة بدلاً من الإخفاء التلقائي بـ <span className="font-mono">hidden</span>{' '}
-              لتفادي ظهور صفحة بيضاء عند أي عطل.
+              2. افتح مستودع <span className="font-mono font-semibold">Sameh-Yassin-CairoDevelopers/NOUB-CRM</span> على GitHub، واضغط <span className="font-semibold">Add file &rarr; Upload files</span> لرفع الملفات الخمسة في المجلد الرئيسي مباشرة واستبدال القديمة، ثم اضغط <span className="font-semibold">Commit changes</span>.
             </p>
             <p>
-              3. تضمين الرسوم البيانية للتطبيقات، شاشة متابعة التطبيق والهيكل الوظيفي، الفلاتر المتعددة، وتصدير CSV.
+              3. انتظر دقيقة واحدة لإعادة بناء GitHub Pages ثم حدّث الصفحة بـ <span className="font-mono">Ctrl+F5</span>.
             </p>
           </div>
 
@@ -116,7 +120,7 @@ export const GitHubExportModal: React.FC<GitHubExportModalProps> = ({ open, onCl
             <div>
               <p className="text-sm font-bold text-slate-900">تحميل الحزمة الكاملة (ملف مضغوط ZIP)</p>
               <p className="text-xs text-slate-600 mt-0.5">
-                فك الضغط وارفع الملفات الخمسة مباشرة إلى جذر مستودع NOUB-CRM على GitHub
+                تشمل الإصلاح الكامل للمسارات + إنشاء حساب + دخول 12345678 + الرسوم البيانية
               </p>
             </div>
             <button
@@ -131,7 +135,7 @@ export const GitHubExportModal: React.FC<GitHubExportModalProps> = ({ open, onCl
           </div>
 
           <div>
-            <p className="text-xs font-bold text-slate-700 mb-2">أو تحميل كل ملف على حدة:</p>
+            <p className="text-xs font-bold text-slate-700 mb-2">أو نسخ / تحميل كل ملف على حدة:</p>
             <div className="divide-y divide-slate-100 border border-slate-200 rounded-lg overflow-hidden">
               {FILE_DESCRIPTIONS.map((item) => (
                 <div key={item.name} className="flex items-center justify-between gap-3 px-4 py-2.5 bg-white">
@@ -144,14 +148,33 @@ export const GitHubExportModal: React.FC<GitHubExportModalProps> = ({ open, onCl
                       <p className="text-xs text-slate-500 truncate">{item.desc}</p>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => downloadSingleStaticFile(item.name, sbUrl, sbKey)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold rounded-md cursor-pointer whitespace-nowrap shrink-0"
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    <span>تحميل</span>
-                  </button>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => handleCopyFile(item.name)}
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold rounded-md cursor-pointer whitespace-nowrap"
+                    >
+                      {copiedFile === item.name ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-700" />
+                          <span className="text-emerald-700">تم النسخ</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5" />
+                          <span>نسخ</span>
+                        </>
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => downloadSingleStaticFile(item.name, sbUrl, sbKey)}
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold rounded-md cursor-pointer whitespace-nowrap"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>تحميل</span>
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
