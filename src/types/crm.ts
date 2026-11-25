@@ -83,4 +83,4 @@ export interface TeamRecord {
 
 export type AnyRecord = Record<string, any> & { id: string; created_at?: string };
 
-export type ViewId = 'dash' | 'app-workspace' | TableId;
+export type ViewId = 'dash' | 'app-workspace' | 'joint-tasks' | 'handover' | 'master-registry' | TableId;

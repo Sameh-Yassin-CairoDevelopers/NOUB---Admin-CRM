@@ -22,6 +22,9 @@ import {
   CheckSquare,
   Users,
   Info,
+  ClipboardCheck,
+  ShieldCheck,
+  Archive,
 } from 'lucide-react';
 import { TABLES } from './data/tables';
 import { getLocalSessionEmail, setLocalSessionEmail } from './lib/dataService';
@@ -32,6 +35,9 @@ import { ExecutiveDashboard } from './components/ExecutiveDashboard';
 import { AppWorkspaceView } from './components/AppWorkspaceView';
 import { DataGridView } from './components/DataGridView';
 import { GitHubExportModal } from './components/GitHubExportModal';
+import { JointTasksView } from './components/JointTasksView';
+import { HandoverView } from './components/HandoverView';
+import { MasterRegistryView } from './components/MasterRegistryView';
 
 const TABLE_ICONS: Record<TableId, React.ReactNode> = {
   telecom_lines: <Phone className="w-4 h-4 shrink-0" />,
@@ -131,6 +137,24 @@ export default function App() {
         subtitle: 'مسار الاستلام المرحلي وتوزيع المسؤوليات لكل تطبيق',
       };
     }
+    if (activeView === 'joint-tasks') {
+      return {
+        title: 'جدول متابعة بنود العمل المشتركة (105 بنود)',
+        subtitle: 'متابعة تنفيذ م/ عماد الشرقاوي وم/ سامح ياسين وتحديث الحالات لحظياً',
+      };
+    }
+    if (activeView === 'handover') {
+      return {
+        title: 'حزمة تسليم مقر المعادي إلى م/ عماد الشرقاوي',
+        subtitle: 'البوابات الـ 14، Zoho Lite، السنترال الجراند ستريم، راك 27U، وسحابة WE',
+      };
+    }
+    if (activeView === 'master-registry') {
+      return {
+        title: 'السجل المرجعي الشامل للمشروع (450 بنداً)',
+        subtitle: 'الأرشيف الكامل للمهام والأفكار والفواتير والأجهزة والقرارات',
+      };
+    }
     return {
       title: activeTable?.name || '',
       subtitle: activeTable?.description || '',
@@ -214,6 +238,50 @@ export default function App() {
           <Layers className="w-4 h-4 shrink-0" />
           <span>التطبيقات والهيكل</span>
         </button>
+
+        <div className="pt-3">
+          <p className="px-3 pb-1 text-[11px] font-semibold text-slate-400">
+            إدارة مقر المعادي والتسليم
+          </p>
+          <div className="space-y-0.5">
+            <button
+              type="button"
+              onClick={() => navigate('joint-tasks')}
+              className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
+                activeView === 'joint-tasks'
+                  ? 'bg-blue-600 text-white font-semibold'
+                  : 'text-slate-200 hover:bg-white/10'
+              }`}
+            >
+              <ClipboardCheck className="w-4 h-4 shrink-0" />
+              <span>المهام المشتركة (105)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate('handover')}
+              className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
+                activeView === 'handover'
+                  ? 'bg-blue-600 text-white font-semibold'
+                  : 'text-slate-200 hover:bg-white/10'
+              }`}
+            >
+              <ShieldCheck className="w-4 h-4 shrink-0" />
+              <span>تسليم م/ عماد (المقر)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate('master-registry')}
+              className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
+                activeView === 'master-registry'
+                  ? 'bg-blue-600 text-white font-semibold'
+                  : 'text-slate-200 hover:bg-white/10'
+              }`}
+            >
+              <Archive className="w-4 h-4 shrink-0" />
+              <span>السجل الشامل (450)</span>
+            </button>
+          </div>
+        </div>
 
         {navGroups.map((group) => (
           <div key={group.id} className="pt-3">
@@ -346,6 +414,12 @@ export default function App() {
         {activeView === 'app-workspace' && (
           <AppWorkspaceView initialAppId={selectedAppId} />
         )}
+
+        {activeView === 'joint-tasks' && <JointTasksView />}
+
+        {activeView === 'handover' && <HandoverView />}
+
+        {activeView === 'master-registry' && <MasterRegistryView />}
 
         {activeTable && <DataGridView table={activeTable} />}
       </main>
